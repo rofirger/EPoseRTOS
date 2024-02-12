@@ -107,14 +107,14 @@ inline soft_timer_state os_soft_timer_get_state(const uint32_t _id)
 // 获取从开始到现在的时间(单位:us). 不建议使用
 inline unsigned int sys_tick_get_us(void)
 {
-    return (CLOCK_COUNT_TO_US(os_hw_systick_get_reload() - os_hw_systick_get_val(), CONFIG_CLOCK_FREQUENCY) + (_systick_times - _irq_times_s) * CLOCK_COUNT_TO_US(os_hw_systick_get_reload(), CONFIG_CLOCK_FREQUENCY));
+    return (CLOCK_COUNT_TO_US(os_hw_systick_get_reload() - os_hw_systick_get_val(), CONFIG_SYSTICK_CLOCK_FREQUENCY) + (_systick_times - _irq_times_s) * CLOCK_COUNT_TO_US(os_hw_systick_get_reload(), CONFIG_SYSTICK_CLOCK_FREQUENCY));
 }
 
 soft_timer_time_t soft_timer_get_time(void)
 {
     soft_timer_time_t _ret;
-    float _one_iqr_ms = CLOCK_COUNT_TO_US(os_hw_systick_get_reload(), CONFIG_CLOCK_FREQUENCY) / 1000.0f;
-    float _ret_ms = CLOCK_COUNT_TO_US(os_hw_systick_get_reload() - os_hw_systick_get_val(), CONFIG_CLOCK_FREQUENCY) / 1000.0f;
+    float _one_iqr_ms = CLOCK_COUNT_TO_US(os_hw_systick_get_reload(), CONFIG_SYSTICK_CLOCK_FREQUENCY) / 1000.0f;
+    float _ret_ms = CLOCK_COUNT_TO_US(os_hw_systick_get_reload() - os_hw_systick_get_val(), CONFIG_SYSTICK_CLOCK_FREQUENCY) / 1000.0f;
     float _total_ms = _one_iqr_ms * (_systick_times - _irq_times_s) + _ret_ms;
     _ret._ms = (uint32_t)_total_ms;
     _ret._us = (uint32_t)((_total_ms - (uint32_t)_total_ms) * 1000.0f);

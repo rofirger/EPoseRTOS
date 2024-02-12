@@ -10,7 +10,6 @@
 #ifndef _OS_PORT_H_
 #define _OS_PORT_H_
 
-extern unsigned int enter_critical_num;
 void os_init_msp(void);
 void os_ctx_sw(void);
 void os_ctx_sw_clear(void);
@@ -33,8 +32,8 @@ void os_port_init(void);
 /*
  * switch to interrupt stack
  * */
-#define GET_INT_MSP()   asm("csrrw sp,mscratch,sp")
-#define FREE_INT_MSP()  asm("csrrw sp,mscratch,sp")
+#define GET_INT_MSP()   //asm("csrrw sp,mscratch,sp")
+#define FREE_INT_MSP()  //asm("csrrw sp,mscratch,sp")
 
 #define OS_ENTER_CRITICAL  unsigned int __critical_state__ = os_port_enter_critical();
 #define OS_EXIT_CRITICAL   os_port_exit_critical(__critical_state__);

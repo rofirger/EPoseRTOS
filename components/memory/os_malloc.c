@@ -13,13 +13,14 @@
 #include "os_malloc.h"
 #include "stdlib.h"
 #include "../../os_config.h"
+#include "../../os_def.h"
 #include "../../os_list.h"
 #include "../../board/os_board.h"
 #include "../../os_service.h"
 #include "../../board/libcpu_headfile.h"
 
 #define HEAP_MEM_MAGIC (0x6870) // magic number
-#define RTOS_HEAP_SIZE (69632) // 65k
+#define RTOS_HEAP_SIZE (5120)
 
 LIST_HEAD(heap_list_head);
 
@@ -36,12 +37,14 @@ struct small_memory_header {
     unsigned int _size;    // bytes
     struct list_head _nd;
 };
-
+unsigned char tmp_mem[RTOS_HEAP_SIZE];
 void os_memory_init(void)
 {
 //    heap.heap_head = RTOS_HEAP_BEGIN;
 //    heap.heap_size = (unsigned int)((unsigned char*)RTOS_HEAP_END) - (unsigned int)((unsigned char*)RTOS_HEAP_BEGIN);
-    heap.heap_head = malloc(RTOS_HEAP_SIZE);
+    //heap.heap_head = malloc(RTOS_HEAP_SIZE);
+    heap.heap_head = tmp_mem;
+    OS_ASSERT(heap.heap_head != NULL);
     heap.heap_size = RTOS_HEAP_SIZE;
     struct small_memory_header* _m = (struct small_memory_header*)heap.heap_head;
     _m->_magic = HEAP_MEM_MAGIC;
@@ -53,7 +56,7 @@ void os_memory_init(void)
 __os_static void* __os_malloc_base(struct list_head* _heap_list_head,
                                    unsigned int _size)
 {
-    // 内存对齐要求。size是否是4的整数倍
+    // size4
     _size = _size + (4 - (_size % 4));
 
     struct list_head* _current_node = NULL;
@@ -62,12 +65,12 @@ __os_static void* __os_malloc_base(struct list_head* _heap_list_head,
         struct small_memory_header* smh = os_list_entry(_current_node, struct small_memory_header, _nd);
         if (smh->_magic == HEAP_MEM_MAGIC && smh->_used == false) {
             if (smh->_size >= _size + sizeof(struct small_memory_header)) {
-                // 无法分为两个连结
+                // 
                 if (smh->_size <= _size + 2 * sizeof(struct small_memory_header)) {
                     smh->_used = true;
                     return ((void*)((unsigned char*)smh + sizeof(struct small_memory_header)));
                 } else {
-                    // 分割
+                    // 
                     struct small_memory_header* next_smh = (struct small_memory_header*)((unsigned char*)smh +
                             sizeof(struct small_memory_header) + _size);
                     next_smh->_magic = HEAP_MEM_MAGIC;
@@ -94,7 +97,7 @@ __os_inline void* os_malloc(unsigned int _size)
 }
 
 /*
- * @note: _m_head 必须4字节对齐，否则返回 0.
+ * @note: _m_head 4 0.
  * */
 OS_MALLOC_HANDLE os_malloc_keep(void* _m_head, unsigned int _size)
 {
@@ -141,7 +144,7 @@ __os_static void __os_free_base(struct list_head* _heap_list_head,
 
     struct small_memory_header* smh_this = NULL;
     struct small_memory_header* smh_next = NULL;
-    // 往前
+    // 
     while (_tmp_nd->prev != _heap_list_head) {
         smh_this = os_list_entry(_tmp_nd, struct small_memory_header, _nd);
         smh_next = os_list_entry(_tmp_nd->prev, struct small_memory_header, _nd);
@@ -154,7 +157,7 @@ __os_static void __os_free_base(struct list_head* _heap_list_head,
         }
         _tmp_nd = _assist_nd;
     }
-    // 往后
+    // 
     while (_tmp_nd->next != _heap_list_head) {
         smh_this = os_list_entry(_tmp_nd, struct small_memory_header, _nd);
         smh_next = os_list_entry(_tmp_nd->next, struct small_memory_header, _nd);

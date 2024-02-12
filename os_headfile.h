@@ -2,6 +2,7 @@
 #define _OS_HEADFILE_H_
 #include "os_core.h"
 #include "os_config.h"
+#include "os_def.h"
 #include "os_list.h"
 #include "os_sched.h"
 #include "os_sys.h"

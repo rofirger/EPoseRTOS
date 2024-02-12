@@ -10,22 +10,10 @@
 #ifndef _SOFT_TIMER_H_
 #define _SOFT_TIMER_H_
 #include "os_config.h"
+#include "os_def.h"
 #include "stdlib.h"
 #include "stdint.h"
 
-#ifndef NULL
-#define NULL 0
-#endif
-
-#ifndef bool
-#define bool unsigned char
-#endif
-#ifndef true
-#define true 1
-#endif
-#ifndef false
-#define false 0
-#endif
 #define SOFT_TIMER_NUM 2
 
 #define CLOCK_COUNT_TO_US(_count, _freq) ((uint64_t)((uint64_t)(_count)*1000000U / (_freq)))

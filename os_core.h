@@ -15,6 +15,7 @@
 
 #include "os_list.h"
 #include "os_config.h"
+#include "os_def.h"
 
 typedef void (*__task_fn_)(void* _arg);
 
@@ -23,11 +24,11 @@ typedef unsigned char os_task_priority_t;
 
 enum os_task_state
 {
-	OS_TASK_NEW             =  1,
-	OS_TASK_READY           =  2,
-	OS_TASK_RUNNING         =  3,
-	OS_TASK_TERMINATED      =  4,
-	OS_TASK_BLOCKING        =  5
+    OS_TASK_NEW             =  1,
+    OS_TASK_READY           =  2,
+    OS_TASK_RUNNING         =  3,
+    OS_TASK_TERMINATED      =  4,
+    OS_TASK_BLOCKING        =  5
 };
 
 enum os_task_block_state{
@@ -38,35 +39,35 @@ enum os_task_block_state{
 
 typedef struct task_control_block
 {
-	// pointer of task stack top
-	os_task_stack_t* _stack_top;
-	// sp register
-	void* sp;
-	// task priority
-	os_task_priority_t _task_priority;
+    // pointer of task stack top
+    os_task_stack_t* _stack_top;
+    // sp register
+    void* sp;
+    // task priority
+    os_task_priority_t _task_priority;
 
-	// task state
-	enum os_task_state _task_state;
-	// block state
-	enum os_task_block_state _task_block_state;
-	const char* _task_name;
-	unsigned int _task_id;
-	unsigned int _task_timeslice;
+    // task state
+    enum os_task_state _task_state;
+    // block state
+    enum os_task_block_state _task_block_state;
+    const char* _task_name;
+    unsigned int _task_id;
+    unsigned int _task_timeslice;
 
-	struct os_block_object* _block_mount;
+    struct os_block_object* _block_mount;
 
-	struct list_head _bt_nd;
-	struct list_head _slot_nd;
+    struct list_head _bt_nd;
+    struct list_head _slot_nd;
 }tcb_t;
 
 
 os_handle_state_t os_task_create(struct task_control_block* _task_tcb,
-							unsigned int* _stack_addr,
-							unsigned int _stack_size,
-							unsigned char _prio,
-							__task_fn_ _entry_fn,
-							void* _entry_fn_arg,
-							const char* _task_name);
+                                 unsigned int* _stack_addr,
+                                 unsigned int _stack_size,
+                                 unsigned char _prio,
+                                 __task_fn_ _entry_fn,
+                                 void* _entry_fn_arg,
+                                 const char* _task_name);
 bool os_cpu_is_running(void);
 void os_cpu_set_running(void);
 

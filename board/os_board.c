@@ -3,58 +3,53 @@
  * @author: Feijie Luo
  * @Change Logs:
  * Date           Author       Notes
- * 2023-10-12     Feijie Luo   Support CH32V307
+ * 2024-02-08     Feijie Luo   Support HPM6750
  * @note: 32bit risc-v mcu
  ***********************/
 
 #include "os_board.h"
+#include "hpm_mchtmr_drv.h"
+#include "hpm_clock_drv.h"
+#include "hpm_sysctl_drv.h"
+#include "hpm_pmp_drv.h"
+#include "hpm_uart_drv.h"
+#include "board.h"
 #include "string.h"
 #include "../os_headfile.h"
 
-SysTick_Type old_systick;
-
-// ²ÉÓÃRISC-VÄÚºËµÎ´ðÊ±ÖÓ½øÐÐ¼ÆÊ±. Ã¿Ò»´Îµ÷ÓÃÖØÆôÒ»´ÎÐÂµÄ¼ÆÊ±. ´Ëº¯Êý²»¿ÉËæÒâµ÷ÓÃ£¬·ñÔò»áÔì³É³ÌÐò³öÏÖÊ±Ðò´íÎó£¡
+/********************* systick *********************/
 static void os_hw_systick_init(const uint64_t _reload_tick)
 {
-    os_soft_timer_reset_systick_times();
-
-    // ±£´æSysTickÉÏÎÄ
-    old_systick.CMP = SysTick->CMP;
-    old_systick.CTLR = SysTick->CTLR;
-    old_systick.SR = SysTick->SR;
-
-    // Çå³ý±êÖ¾Î»
-    SysTick->SR &= ~(1 << 0);
-    // ´ËÌõ¼þÏÂ±ØÐëÉèÖÃÎªÏòÏÂ¼ÆÊý
-    SysTick->CMP = _reload_tick;
-    // ÏòÏÂ¼ÆÊý
-    SysTick->CTLR |= (1 << 4);
-    // Ñ¡ÔñHCLK×÷ÎªÊ±»ù
-    SysTick->CTLR |= (1 << 2);
-    // ÏòÉÏ¼ÆÊýÊ±¸üÐÂÎª 0£¬ÏòÏÂ¼ÆÊýÊ±¸üÐÂÎª±È½ÏÖµ | ¼ÆÊýÆ÷ÖÐ¶ÏÊ¹ÄÜ¿ØÖÆÎ» | Æô¶¯ÏµÍ³¼ÆÊýÆ÷ STK | ×Ô¶¯×°ÔØ
-    SysTick->CTLR |= (1 << 5) | (1 << 1) | (1 << 0) | (1 << 3);
-    NVIC_SetPriority(SysTicK_IRQn, 0xf0);     //ÉèÖÃSysTickÖÐ¶ÏÓÅÏÈ¼¶
-    NVIC_EnableIRQ(SysTicK_IRQn);           //Ê¹ÄÜ¿ªÆôSystickÖÐ¶Ï
+    // è®¾ç½®CPU0çš„mchtmr
+    sysctl_config_clock(HPM_SYSCTL, clock_node_mchtmr0, clock_source_osc0_clk0, 1);
+    sysctl_add_resource_to_cpu0(HPM_SYSCTL, sysctl_resource_mchtmr0);
+    board_ungate_mchtmr_at_lp_mode();
+    
+    // å¼€å¯ä¸­æ–­
+    enable_mchtmr_irq();
+    mchtmr_init_counter(HPM_MCHTMR, 0);
+    mchtmr_set_compare_value(HPM_MCHTMR, _reload_tick);
 }
 
 inline uint64_t os_hw_systick_get_reload(void)
 {
-    return SysTick->CMP;
+    return CLOCK_COUNT_TO_MS(CONFIG_SYSTICK_CLOCK_FREQUENCY, 1);
 }
 
 inline uint64_t os_hw_systick_get_val(void)
 {
-    return SysTick->CNT;
+    return mchtmr_get_count(HPM_MCHTMR);
 }
 
-void os_hw_systick_restore(void)
+/********************* software interrupt *********************/
+static void os_hw_sw_init()
 {
-    SysTick->CMP = old_systick.CMP;
-    SysTick->SR = old_systick.SR;
-    SysTick->CTLR = old_systick.CTLR;
+    intc_m_enable_swi();
+    intc_m_init_swi();
 }
 
 /********************* system uart *********************/
+#define SYS_UART  (BOARD_APP_UART_BASE)
 static struct os_device* sys_uart_handle;
 
 struct os_device* os_get_sys_uart_device_handle(void)
@@ -64,43 +59,7 @@ struct os_device* os_get_sys_uart_device_handle(void)
 
 os_handle_state_t sys_uart_hw_init(struct os_device* dev)
 {
-    GPIO_InitTypeDef  GPIO_InitStructure  = {0};
-    USART_InitTypeDef USART_InitStructure = {0};
-    NVIC_InitTypeDef  NVIC_InitStructure  = {0};
-
-    RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART2, ENABLE);
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
-
-    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2;
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
-    GPIO_Init(GPIOA, &GPIO_InitStructure);
-
-    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_3;
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
-    GPIO_Init(GPIOA, &GPIO_InitStructure);
-
-    USART_InitStructure.USART_BaudRate = 115200;
-    USART_InitStructure.USART_WordLength = USART_WordLength_8b;
-    USART_InitStructure.USART_StopBits = USART_StopBits_1;
-    USART_InitStructure.USART_Parity = USART_Parity_No;
-    USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
-    // ½ÓÊÕºÍ·¢ËÍ
-    USART_InitStructure.USART_Mode = USART_Mode_Tx | USART_Mode_Rx;
-    USART_Init(USART2, &USART_InitStructure);
-
-    /* Ê¹ÄÜ´®¿Ú1ÖÐ¶Ï */
-    NVIC_InitStructure.NVIC_IRQChannel = USART2_IRQn;
-    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 1;
-    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
-    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-    NVIC_Init(&NVIC_InitStructure);
-
-    USART_ITConfig(USART2, USART_IT_RXNE, ENABLE);    /* Ê¹ÄÜ´®¿Ú¿ÕÏÐÖÐ¶Ï */
-
-    USART_Cmd(USART2, ENABLE);
-
+    board_init_console();
     return OS_HANDLE_SUCCESS;
 }
 
@@ -116,19 +75,16 @@ os_handle_state_t sys_uart_close(struct os_device* dev)
 
 os_size_t sys_uart_write(struct os_device* dev, os_off_t pos, const void* buffer, os_size_t size)
 {
-    char* buf = (char*)buffer;
-    int i;
-    for(i = 0; i < size; i++)
-    {
-        while(USART_GetFlagStatus(USART2, USART_FLAG_TC) == RESET) {};
-        USART_SendData(USART2, *buf++);
-
-    }
+    hpm_stat_t stat = uart_send_data(SYS_UART, (uint8_t*)buffer, size);
+    uart_flush(SYS_UART);
     return 1;
 }
 
 os_size_t sys_uart_read(struct os_device* dev, os_off_t pos, void* buffer, os_size_t size)
 {
+    hpm_stat_t stat = uart_receive_data(SYS_UART, (uint8_t*)buffer, size);
+    if (stat == status_fail)
+      return 0;
     return 1;
 }
 
@@ -136,7 +92,7 @@ os_handle_state_t sys_uart_rx_indicate(struct os_device* dev, os_size_t size)
 {
 #ifdef CONFIG_FISH
     static char sys_uart_tmp_rec_char;
-    sys_uart_tmp_rec_char = USART2->DATAR & 0xFF;
+    uart_receive_byte(SYS_UART, &sys_uart_tmp_rec_char);
     return os_fish_irq_handle_callback((unsigned int)sys_uart_tmp_rec_char);
 #else
     return OS_HANDLE_FAIL;
@@ -170,45 +126,46 @@ static void sys_uart_register(void)
 }
 
 /********************* system uart *********************/
-
+const uint32_t SYSTICK_RELOAD_VAL = (MS_TO_CLOCK_COUNT(1, CONFIG_SYSTICK_CLOCK_FREQUENCY));
 void os_board_init(void)
 {
-    os_hw_systick_init(MS_TO_CLOCK_COUNT(1, CONFIG_CLOCK_FREQUENCY));
-    /* Óë SysTick µÄÓÅÏÈ¼¶ÏàÍ¬  */
-    NVIC_SetPriority(Software_IRQn, 0xf0);
-    NVIC_EnableIRQ(Software_IRQn);
+    board_init_clock();
+    board_init_pmp();
+    //board_init_ahb();
+
+    /* systick */
+    os_hw_systick_init(SYSTICK_RELOAD_VAL);
+    /* SW */
+    os_hw_sw_init();
 
     sys_uart_register();
 }
 
 
-// Ó²¼þÑ¹Õ»
-void SysTick_Handler(void) __attribute__((interrupt("WCH-Interrupt-fast")));
-void SysTick_Handler(void)
+void systick_handler(void)
 {
     GET_INT_MSP();
-
-    // Çå³ý±êÖ¾Î»
+    
+    mchtmr_delay(HPM_MCHTMR, SYSTICK_RELOAD_VAL);
     os_clear_systick_flag();
     os_soft_timer_systick_handle();
     os_systick_handler();
 
     FREE_INT_MSP();
 }
+SDK_DECLARE_MCHTMR_ISR(systick_handler)
 
-void USART2_IRQHandler(void) __attribute__((interrupt("WCH-Interrupt-fast")));
-void USART2_IRQHandler(void)
+void sysuart_handler(void)
 {
     GET_INT_MSP();
     os_sys_enter_irq();
 
-    if(USART_GetITStatus(USART2, USART_IT_RXNE) != RESET)
+    if(SYS_UART->LSR & UART_LSR_DR_MASK)
     {
-        USART_ClearITPendingBit(USART2, USART_IT_RXNE);
         os_device_rx_indicate(sys_uart_handle, 1);
     }
 
     os_sys_exit_irq();
     FREE_INT_MSP();
 }
-
+SDK_DECLARE_EXT_ISR_M(BOARD_APP_UART_IRQ, sysuart_handler)

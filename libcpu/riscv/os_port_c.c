@@ -10,8 +10,11 @@
 
 
 #include "os_port_c.h"
+#include "hpm_common.h"
+#include "hpm_soc.h"
+#include "hpm_interrupt.h"
+#include "hpm_mchtmr_drv.h"
 #include "../../os_sys.h"
-#include "../../User/ch32v30x_it.h"
 #include "../../os_core.h"
 #include "../../os_config.h"
 
@@ -90,37 +93,36 @@ struct os_hw_stack_frame
 #endif
 };
 
-unsigned int enter_critical_num;
-
-
 unsigned int* os_process_stack_init(void* _fn_entry, 
-									void* _arg, 
-									void* _exit, 
-									void* _stack_addr,
-									unsigned int _stack_size)
+                                    void* _arg, 
+                                    void* _exit, 
+                                    void* _stack_addr,
+                                    unsigned int _stack_size)
 {
-    // 栈向下生长， uint32_t对应struct os_hw_stack_frame的成员大小
-	// locate end of _stack_addr
+    // locate the end of _stack_addr
     unsigned int* _tmp_stack_addr = (unsigned int*)((unsigned int)_stack_addr + _stack_size - 1);
-	// note: 8-byte align		AAPCS  We must ensure that 8-byte alignment is maintained in C
-	_tmp_stack_addr = (unsigned int*)((unsigned int)(_tmp_stack_addr) & 0xFFFFFFF8UL);
-	// 储存上文
-	_tmp_stack_addr = (unsigned int*)((unsigned int)_tmp_stack_addr - sizeof(struct os_hw_stack_frame));
+    // 8-byte align
+    _tmp_stack_addr = (unsigned int*)((unsigned int)(_tmp_stack_addr) & 0xFFFFFFF8UL);
+    // 储存上文
+    _tmp_stack_addr = (unsigned int*)((unsigned int)_tmp_stack_addr - sizeof(struct os_hw_stack_frame));
 	
-	for (int i = 0; i < sizeof(struct os_hw_stack_frame) / sizeof(uint32_t); ++i)
-	    _tmp_stack_addr[i] = 0xdeadbeef; // magic number
+    for (int i = 0; i < sizeof(struct os_hw_stack_frame) / sizeof(uint32_t); ++i)
+        _tmp_stack_addr[i] = 0xdeadbeef; // magic number
 
-	struct os_hw_stack_frame* frame = (struct os_hw_stack_frame*)_tmp_stack_addr;
+    struct os_hw_stack_frame* frame = (struct os_hw_stack_frame*)_tmp_stack_addr;
 
-	frame->ra = (uint32_t)_exit;
-	frame->a0 = (uint32_t)_arg;
-	frame->epc = (uint32_t)_fn_entry;
+    frame->ra = (uint32_t)_exit;
+    frame->a0 = (uint32_t)_arg;
+    frame->epc = (uint32_t)_fn_entry;
 
-	/* force to machine mode(MPP=11) and set MPIE to 1 and FS=11 */
-	// 使用机器模式，使用硬件浮点功能，进中断之前中断使能状态为使能，
-	frame->mstatus = 0x00007880;
+    /* force to machine mode(MPP=11) and set MPIE to 1 and FS=11 */
+#ifdef CONFIG_ARCH_FPU
+    frame->mstatus = 0x00007880;
+#else
+    frame->mstatus = 0x00001880;
+#endif
 
-	return _tmp_stack_addr;
+    return _tmp_stack_addr;
 }
 
 void os_port_cpu_int_disable(void)
@@ -136,32 +138,28 @@ void os_port_cpu_int_enable(void)
 
 unsigned int os_port_cpu_primask_get(void)
 {
-	unsigned int _ret;
-	asm volatile("csrr %0, mstatus" : "=r" (_ret));
-	return(_ret);
+    unsigned int _ret;
+    asm volatile("csrr %0, mstatus" : "=r" (_ret));
+    return(_ret);
 }
 
 void os_port_cpu_primask_set(unsigned int _primask)
 {
-	asm volatile("csrw mstatus, %0" :: "r" (_primask));
+    asm volatile("csrw mstatus, %0" :: "r" (_primask));
 }
 
 /* 进入临界区 */
 unsigned int os_port_enter_critical(void)
 {
-//	unsigned int _ret = os_port_cpu_primask_get();
-//
-//	os_port_cpu_int_disable();
-//
     unsigned int _ret;
     asm("csrrw %0, mstatus, %1":"=r"(_ret):"r"(0x7800));
-	return _ret;
+    return _ret;
 } 
 
 /* 退出临界区 */
 void os_port_exit_critical(unsigned int _state)
 {
-	os_port_cpu_primask_set(_state);
+    os_port_cpu_primask_set(_state);
 }
 
 /*
@@ -169,8 +167,7 @@ void os_port_exit_critical(unsigned int _state)
  */
 void os_ctx_sw(void)
 {
-    //SysTick->CTLR |= (1<<31);
-    NVIC_SetPendingIRQ(Software_IRQn);
+    intc_m_trigger_swi();
 }
 
 /*
@@ -178,13 +175,13 @@ void os_ctx_sw(void)
  */
 void os_ctx_sw_clear(void)
 {
-    //SysTick->CTLR &= ~(1<<31);
-    NVIC_ClearPendingIRQ(Software_IRQn);
+    intc_m_claim_swi();
+    intc_m_complete_swi();
 }
 
 inline void os_clear_systick_flag(void)
 {
-    SysTick->SR  = 0;
+    //SysTick->SR  = 0;
 }
 
 inline void os_ready_to_current(void)
@@ -197,7 +194,7 @@ inline void os_ready_to_current(void)
 **/
 inline void os_init_msp(void)
 {
-    asm volatile("la t0, _eusrstack");
+    asm volatile("la t0, _stack");
     asm volatile("addi t0, t0, -512");
     asm volatile("csrw mscratch, t0");
 }

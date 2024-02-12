@@ -109,18 +109,18 @@ __os_static void __os_task_exit_handle(void)
 }
 
 os_handle_state_t os_task_create(struct task_control_block* _task_tcb,
-								 unsigned int* _stack_addr,
-								 unsigned int _stack_size,
-								 unsigned char _prio,
-								 __task_fn_ _entry_fn,
-								 void* _entry_fn_arg,
-								 const char* _task_name)
+                                 unsigned int* _stack_addr,
+                                 unsigned int _stack_size,
+                                 unsigned char _prio,
+                                 __task_fn_ _entry_fn,
+                                 void* _entry_fn_arg,
+                                 const char* _task_name)
 {
 	if (NULL == _task_tcb ||
-		NULL == _stack_addr ||
-		NULL == _entry_fn ||
-		_prio > OS_TASK_MAX_PRIORITY)
-		return OS_HANDLE_FAIL;
+            NULL == _stack_addr ||
+            NULL == _entry_fn ||
+            _prio > OS_TASK_MAX_PRIORITY)
+            return OS_HANDLE_FAIL;
 	
 	unsigned int _last_critical_state = os_port_enter_critical();
 	unsigned int _tmp_id = OS_TASK_MAX_ID + 1;

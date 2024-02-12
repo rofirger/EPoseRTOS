@@ -3,12 +3,12 @@
 #define _OS_SERVICE_H_
 
 #include "os_config.h"
-
+#include "os_def.h"
 
 #define OS_SERVICE_FISH_MSG_MAX_SIZE   (32)
-// 链表上最多保存过去 OS_SERVICE_FISH_MSG_LIST_CAP 条信息
+//  OS_SERVICE_FISH_MSG_LIST_CAP 
 #define OS_SERVICE_FISH_MSG_LIST_CAP   (10)
-// fish支持的参数个数上限
+// fish
 #define OS_SERVICE_FISH_ARG_MAX        (8)
 
 struct os_service_fish_input {
