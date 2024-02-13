@@ -10,28 +10,29 @@
  * @note:
  ***********************/
 
-#include "os_tick.h"
-#include "os_sys.h"
+#include "os_core.h"
 #include "os_list.h"
 #include "os_sched.h"
-#include "os_core.h"
+#include "os_sys.h"
+#include "os_tick.h"
 
 #include "board/libcpu_headfile.h"
 #include "components/memory/os_malloc.h"
 
 LIST_HEAD(_os_tick_list_head);
 
-__os_static void __os_tick_add_node(struct task_control_block* _task_tcb, unsigned int _tick)
+__os_static void __os_tick_add_node(struct task_control_block *_task_tcb, unsigned int _tick)
 {
     // 更新task的block状态
     _task_tcb->_task_block_state = OS_TASK_BLOCK_TICKING;
     // 先找一下是否存在相同的_tick对象
-    struct list_head* _current_node = NULL;
-    struct os_tick* _current_node_tick = NULL;
+    struct list_head *_current_node = NULL;
+    struct os_tick *_current_node_tick = NULL;
     unsigned int _prev_tick = 0;
     unsigned int _current_tick = 0;
     // 采取阶梯增量式tick计算方法
-    list_for_each(_current_node, &_os_tick_list_head) {
+    list_for_each(_current_node, &_os_tick_list_head)
+    {
         _current_node_tick = os_list_entry(_current_node, struct os_tick, _tick_list_nd);
         _current_tick = _prev_tick + _current_node_tick->_tick_count;
         if (_current_tick == _tick) {
@@ -44,11 +45,8 @@ __os_static void __os_tick_add_node(struct task_control_block* _task_tcb, unsign
         }
         _prev_tick = _current_tick;
     }
-    struct os_tick* new_tick = os_malloc(sizeof(struct os_tick));
-    if (new_tick == NULL) {
-        // 出错！！！！！！！
-        return;
-    }
+    struct os_tick *new_tick = os_malloc(sizeof(struct os_tick));
+    OS_ASSERT(NULL != new_tick);
     new_tick->_tick_state = OS_TICK_RUNNING;
     new_tick->_tick_count = _tick - _prev_tick;
     os_block_init(&(new_tick->_block_head), OS_BLOCK_TICK);
@@ -56,42 +54,42 @@ __os_static void __os_tick_add_node(struct task_control_block* _task_tcb, unsign
     // 添加任务进入block
     os_add_tick_block_task(_task_tcb, &(new_tick->_block_head));
     // 如果存在后一个任务，更新后面一个任务的_tick
-    if(_current_node != &_os_tick_list_head)
+    if (_current_node != &_os_tick_list_head)
         _current_node_tick->_tick_count -= new_tick->_tick_count;
 }
 
-__os_static void __os_tick_del_node(struct os_tick* ptr_tick)
+__os_static void __os_tick_del_node(struct os_tick *ptr_tick)
 {
     list_del(&(ptr_tick->_tick_list_nd));
     os_free(ptr_tick);
 }
 
-os_handle_state_t os_add_tick_task(struct task_control_block* _task_tcb, unsigned int _tick,
-                                   struct os_block_object* _block_obj)
+os_handle_state_t os_add_tick_task(struct task_control_block *_task_tcb, unsigned int _tick,
+                                   struct os_block_object *_block_obj)
 {
     // 不可以处于 blocking 状态的任务再次 block
-	if (NULL == _task_tcb || os_task_state_is_blocking(_task_tcb))
-		return OS_HANDLE_FAIL;
-	// 先__os_tick_add_node， 后os_add_block_task，不可以调换
-	if (_tick != OS_NEVER_TIME_OUT)
-	    __os_tick_add_node(_task_tcb, _tick);
-	if (_block_obj != NULL)
-	    os_add_block_task(_task_tcb, _block_obj);
-	return OS_HANDLE_SUCCESS;
+    if (NULL == _task_tcb || os_task_state_is_blocking(_task_tcb))
+        return OS_HANDLE_FAIL;
+    // 先__os_tick_add_node， 后os_add_block_task，不可以调换
+    if (_tick != OS_NEVER_TIME_OUT)
+        __os_tick_add_node(_task_tcb, _tick);
+    if (_block_obj != NULL)
+        os_add_block_task(_task_tcb, _block_obj);
+    return OS_HANDLE_SUCCESS;
 }
 
-//void os_tick_del_task(struct task_control_block* _task_tcb)
+// void os_tick_del_task(struct task_control_block* _task_tcb)
 //{
-//    struct os_tick* task_mount_tick = os_list_entry(_task_tcb->_block_mount, struct os_tick, _block_head);
+//     struct os_tick* task_mount_tick = os_list_entry(_task_tcb->_block_mount, struct os_tick, _block_head);
 //	list_del_init(&(_task_tcb->_bt_nd));
 //	// 检查这个block上是否无task
 //	if (task_mount_tick->_block_head._list.next == &(task_mount_tick->_block_head._list)) {
 //	    // 无task则free对应的tick对象
 //	    __os_tick_del_node(task_mount_tick);
 //	}
-//}
+// }
 
-__os_static void tick_tcb_time_out_cb(struct task_control_block* task)
+__os_static void tick_tcb_time_out_cb(struct task_control_block *task)
 {
     // task 目前处于 time out 状态
     task->_task_block_state = OS_TASK_BLOCK_TIMEOUT;
@@ -99,12 +97,13 @@ __os_static void tick_tcb_time_out_cb(struct task_control_block* task)
     os_rq_add_task(task);
 }
 
-__os_static void os_tick_del_all_task(struct os_tick* ptr_tick, void (*callback)(struct task_control_block* task))
+__os_static void os_tick_del_all_task(struct os_tick *ptr_tick, void (*callback)(struct task_control_block *task))
 {
-    struct list_head* _current_node = NULL;
-    struct list_head* _next_node = NULL;
-    list_for_each_safe(_current_node, _next_node, &(ptr_tick->_block_head._list)) {
-        struct task_control_block* tmp = os_list_entry(_current_node, struct task_control_block, _bt_nd);
+    struct list_head *_current_node = NULL;
+    struct list_head *_next_node = NULL;
+    list_for_each_safe(_current_node, _next_node, &(ptr_tick->_block_head._list))
+    {
+        struct task_control_block *tmp = os_list_entry(_current_node, struct task_control_block, _bt_nd);
         // 注意这里的两行代码不可以互换顺序，因为callback里可能包含将任务挂载在ready队列上
         list_del_init(_current_node);
         callback(tmp);
@@ -116,54 +115,51 @@ __os_static void os_tick_del_all_task(struct os_tick* ptr_tick, void (*callback)
 /* 任务 tick 轮询 */
 void os_task_tick_poll(void)
 {
-	unsigned int _critical_state = os_port_enter_critical();
-	// os_sys_enter_irq();
-	if (list_empty(&_os_tick_list_head))
-	{
-		// os_sys_exit_irq();
-		os_port_exit_critical(_critical_state);
-		return;
-	}
-	struct os_tick* _current_tick_node = NULL;
-	_current_tick_node = os_list_first_entry(&_os_tick_list_head, struct os_tick, _tick_list_nd);
-	--(_current_tick_node->_tick_count);
-	if (_current_tick_node->_tick_count > 0)
-	{
-		// os_sys_exit_irq();
-		os_port_exit_critical(_critical_state);
-		return;
-	}
-	
-	struct list_head* _current_node;
-	struct list_head* _next_node;
-	/* 由于需要将_tick_count == 0的节点移除，
-	   这里需要使用list_for_each_safe以免指针丢失 */
-	list_for_each_safe(_current_node, _next_node, &_os_tick_list_head)
-	{
-	    _current_tick_node = os_list_entry(_current_node, struct os_tick, _tick_list_nd);
-		if (_current_tick_node->_tick_count > 0)
-			break;
-		
-		// 从 _os_tick_list_head 队列中移除
-		os_tick_del_all_task(_current_tick_node, tick_tcb_time_out_cb);
-	}
-	// os_sys_exit_irq();
-	os_port_exit_critical(_critical_state);
-	// 调度
-	__os_sched();
-}
+    unsigned int _critical_state = os_port_enter_critical();
+    // os_sys_enter_irq();
+    if (list_empty(&_os_tick_list_head)) {
+        // os_sys_exit_irq();
+        os_port_exit_critical(_critical_state);
+        return;
+    }
+    struct os_tick *_current_tick_node = NULL;
+    _current_tick_node = os_list_first_entry(&_os_tick_list_head, struct os_tick, _tick_list_nd);
+    --(_current_tick_node->_tick_count);
+    if (_current_tick_node->_tick_count > 0) {
+        // os_sys_exit_irq();
+        os_port_exit_critical(_critical_state);
+        return;
+    }
 
+    struct list_head *_current_node;
+    struct list_head *_next_node;
+    /* 由于需要将_tick_count == 0的节点移除，
+       这里需要使用list_for_each_safe以免指针丢失 */
+    list_for_each_safe(_current_node, _next_node, &_os_tick_list_head)
+    {
+        _current_tick_node = os_list_entry(_current_node, struct os_tick, _tick_list_nd);
+        if (_current_tick_node->_tick_count > 0)
+            break;
+
+        // 从 _os_tick_list_head 队列中移除
+        os_tick_del_all_task(_current_tick_node, tick_tcb_time_out_cb);
+    }
+    // os_sys_exit_irq();
+    os_port_exit_critical(_critical_state);
+    // 调度
+    __os_sched();
+}
 
 /* RTOS延时函数 */
 void os_task_delay_ms(unsigned int _tick_ms)
 {
-	if (_tick_ms == 0)
-		return;
-	unsigned int _critical_state = os_port_enter_critical();
-	struct task_control_block* _current_task_tcb = os_get_current_task_tcb();
-	// 加入延时队列
-	os_add_tick_task(_current_task_tcb, _tick_ms, NULL);
-	os_port_exit_critical(_critical_state);
-	// 调度开启
-	__os_sched();
+    if (_tick_ms == 0)
+        return;
+    unsigned int _critical_state = os_port_enter_critical();
+    struct task_control_block *_current_task_tcb = os_get_current_task_tcb();
+    // 加入延时队列
+    os_add_tick_task(_current_task_tcb, _tick_ms, NULL);
+    os_port_exit_critical(_critical_state);
+    // 调度开启
+    __os_sched();
 }

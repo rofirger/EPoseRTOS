@@ -7,14 +7,14 @@
  * @note:
  ***********************/
 
-#include "os_semaphore.h"
+#include "board/libcpu_headfile.h"
 #include "os_config.h"
 #include "os_sched.h"
+#include "os_semaphore.h"
 #include "os_tick.h"
-#include "board/libcpu_headfile.h"
 #include "stddef.h"
 
-os_handle_state_t os_sem_init(struct os_sem* sem, unsigned short value)
+os_handle_state_t os_sem_init(struct os_sem *sem, unsigned short value)
 {
     if (NULL == sem)
         return OS_HANDLE_FAIL;
@@ -23,39 +23,40 @@ os_handle_state_t os_sem_init(struct os_sem* sem, unsigned short value)
     return OS_HANDLE_SUCCESS;
 }
 
-__os_inline os_handle_state_t os_sem_try_take(struct os_sem* sem)
+__os_inline os_handle_state_t os_sem_try_take(struct os_sem *sem)
 {
     if (NULL == sem)
         return OS_HANDLE_FAIL;
     return (sem->_value > 0) ? OS_HANDLE_SUCCESS : OS_HANDLE_FAIL;
 }
 
-os_handle_state_t os_sem_take(struct os_sem* sem, unsigned int time_out)
+os_handle_state_t os_sem_take(struct os_sem *sem, unsigned int time_out)
 {
     if (NULL == sem)
         return OS_HANDLE_FAIL;
     unsigned int _critical_state = os_port_enter_critical();
-    if (os_sem_try_take(sem)){
+    if (os_sem_try_take(sem)) {
         sem->_value--;
         os_port_exit_critical(_critical_state);
         return OS_HANDLE_SUCCESS;
     } else {
-        struct task_control_block* _current_task_tcb = os_get_current_task_tcb();
-        // ½«µ±Ç°ÈÎÎñ¹ÒÆð
+        struct task_control_block *_current_task_tcb = os_get_current_task_tcb();
+        // å°†å½“å‰ä»»åŠ¡æŒ‚èµ·
         os_add_tick_task(_current_task_tcb, time_out, &sem->_block_obj);
         os_port_exit_critical(_critical_state);
         __os_sched();
-        // ¸Ã´¦ÊÇÎªÁË¸øÈíÖÐ¶ÏÒì³£±»´¥·¢Ç°Áô×ãÊ±¼ä
-        while(os_task_is_block(_current_task_tcb)){};
+        // è¯¥å¤„æ˜¯ä¸ºäº†ç»™è½¯ä¸­æ–­å¼‚å¸¸è¢«è§¦å‘å‰ç•™è¶³æ—¶é—´
+        while (os_task_is_block(_current_task_tcb)) {
+        };
 
         _critical_state = os_port_enter_critical();
 
-        // ³¬Ê±
+        // è¶…æ—¶
         if (_current_task_tcb->_task_block_state == OS_TASK_BLOCK_TIMEOUT) {
             _current_task_tcb->_task_block_state = OS_TASK_BLOCK_NONE;
             os_port_exit_critical(_critical_state);
             return OS_HANDLE_FAIL;
-        }else {
+        } else {
             _current_task_tcb->_task_block_state = OS_TASK_BLOCK_NONE;
             os_port_exit_critical(_critical_state);
             return OS_HANDLE_SUCCESS;
@@ -64,14 +65,14 @@ os_handle_state_t os_sem_take(struct os_sem* sem, unsigned int time_out)
 }
 
 static bool is_take = false;
-__os_static __os_inline void __os_sem_release_cb(struct task_control_block* task)
+__os_static __os_inline void __os_sem_release_cb(struct task_control_block *task)
 {
     is_take = true;
-    // ½«¸ÃÈÎÎñ´Ó¹ÒÔØµÄtickÉÏÕªµô
+    // å°†è¯¥ä»»åŠ¡ä»ŽæŒ‚è½½çš„tickä¸Šæ‘˜æŽ‰
     list_del_init(&(task->_bt_nd));
 }
 
-os_handle_state_t os_sem_release(struct os_sem* sem)
+os_handle_state_t os_sem_release(struct os_sem *sem)
 {
     if (NULL == sem)
         return OS_HANDLE_FAIL;

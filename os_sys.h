@@ -13,7 +13,7 @@
 
 extern unsigned int os_cpu_running_flag;
 
-struct task_control_block* os_get_idle_tcb(void);
+struct task_control_block *os_get_idle_tcb(void);
 void os_sys_init(void);
 void os_sys_start(void);
 bool os_sys_is_in_irq(void);

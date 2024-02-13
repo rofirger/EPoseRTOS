@@ -11,41 +11,37 @@
 #define _SOFT_TIMER_H_
 #include "os_config.h"
 #include "os_def.h"
-#include "stdlib.h"
 #include "stdint.h"
+#include "stdlib.h"
 
 #define SOFT_TIMER_NUM 2
 
-#define CLOCK_COUNT_TO_US(_count, _freq) ((uint64_t)((uint64_t)(_count)*1000000U / (_freq)))
-#define CLOCK_COUNT_TO_MS(_count, _freq) ((uint64_t)((uint64_t)(_count)*1000U / (_freq)))
+#define CLOCK_COUNT_TO_US(_count, _freq) ((uint64_t)((uint64_t)(_count) * 1000000U / (_freq)))
+#define CLOCK_COUNT_TO_MS(_count, _freq) ((uint64_t)((uint64_t)(_count) * 1000U / (_freq)))
 
-#define US_TO_CLOCK_COUNT(_us, _freq) ((uint64_t)((_us) * (_freq) / ((uint64_t)1000000U )))
-#define MS_TO_CLOCK_COUNT(_ms, _freq) ((uint64_t)((_ms) * (_freq) / ((uint64_t)1000U )))
+#define US_TO_CLOCK_COUNT(_us, _freq) ((uint64_t)((_us) * (_freq) / ((uint64_t)1000000U)))
+#define MS_TO_CLOCK_COUNT(_ms, _freq) ((uint64_t)((_ms) * (_freq) / ((uint64_t)1000U)))
 
 typedef void (*soft_timer_callback)(void *_argv);
 
-typedef struct soft_timer_time_t
-{
+typedef struct soft_timer_time_t {
     uint32_t _ms;
     int32_t _us;
 } soft_timer_time_t;
 
-typedef enum soft_timer_state
-{
+typedef enum soft_timer_state {
     SOFT_TIMER_STOPPED,
     SOFT_TIMER_RUNNING,
     SOFT_TIMER_TIMEOUT,
     SOFT_TIMER_NO_STATE
 } soft_timer_state;
 
-typedef enum soft_timer_mode
-{
+typedef enum soft_timer_mode {
     SOFT_TIMER_MODE_ONE_SHOT,
     SOFT_TIMER_MODE_CYCLE
 } soft_timer_mode;
 
-typedef struct soft_timer_t
-{
+typedef struct soft_timer_t {
     soft_timer_state _soft_timer_state;
     soft_timer_mode _soft_timer_mode;
     soft_timer_time_t _due;

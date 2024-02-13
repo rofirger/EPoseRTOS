@@ -9,35 +9,34 @@
  * @note:
  ***********************/
 
+#include "board/libcpu_headfile.h"
+#include "board/os_board.h"
+#include "components/memory/os_malloc.h"
 #include "os_sched.h"
-#include "os_sys.h"
-#include "os_tick.h"
 #include "os_service.h"
 #include "os_soft_timer.h"
-#include "components/memory/os_malloc.h"
-#include "board/os_board.h"
-#include "board/libcpu_headfile.h"
+#include "os_sys.h"
+#include "os_tick.h"
 
-#define IDLE_TASK_PRIO	OS_TASK_MAX_PRIORITY
+#define IDLE_TASK_PRIO       OS_TASK_MAX_PRIORITY
 #define IDLE_TASK_STACK_SIZE 1024
 static struct task_control_block _idle_tcb;
 static unsigned char idle_task_stack[IDLE_TASK_STACK_SIZE];
 
 static unsigned char _os_iqr_nesting;
 
-void os_idle_task(void* _arg)
+void os_idle_task(void *_arg)
 {
-    while(1)
-    {
+    while (1) {
     }
 }
 
 static void __idle_task_create(void)
 {
-    os_task_create(&_idle_tcb, (void*)idle_task_stack, IDLE_TASK_STACK_SIZE, IDLE_TASK_PRIO, os_idle_task, NULL, "KERNEL IDLE TASK");
+    os_task_create(&_idle_tcb, (void *)idle_task_stack, IDLE_TASK_STACK_SIZE, IDLE_TASK_PRIO, os_idle_task, NULL, "KERNEL IDLE TASK");
 }
 
-__os_inline struct task_control_block* os_get_idle_tcb(void)
+__os_inline struct task_control_block *os_get_idle_tcb(void)
 {
     return (&_idle_tcb);
 }
@@ -81,7 +80,8 @@ void os_sys_start(void)
     os_cpu_set_running();
     os_init_msp();
     os_ctx_sw();
-    while(1){};
+    while (1) {
+    };
 }
 
 /* 系统是否处在中断当中, 如果返回true也意味着实时系统此时不会发生调度 */
@@ -94,30 +94,27 @@ bool os_sys_is_in_irq(void)
 void os_sys_enter_irq(void)
 {
     unsigned int _critical_state = os_port_enter_critical();
-    if (os_cpu_is_running() && 
-	_os_iqr_nesting < 255)
-            _os_iqr_nesting++;
+    if (os_cpu_is_running() &&
+        _os_iqr_nesting < 255)
+        _os_iqr_nesting++;
     os_port_exit_critical(_critical_state);
 }
 
 /* 退出中断 */
 void os_sys_exit_irq(void)
 {
-    if (os_cpu_is_running() && 
-	os_sys_is_in_irq())
-    {
+    if (os_cpu_is_running() &&
+        os_sys_is_in_irq()) {
         unsigned int _critical_state = os_port_enter_critical();
-	_os_iqr_nesting--;
-	os_port_exit_critical(_critical_state);
+        _os_iqr_nesting--;
+        os_port_exit_critical(_critical_state);
     }
 }
 
-
 __os_inline void os_systick_handler(void)
 {
-    if (os_cpu_is_running())
-    {
+    if (os_cpu_is_running()) {
         os_sched_timeslice_poll();
-	os_task_tick_poll();
+        os_task_tick_poll();
     }
 }

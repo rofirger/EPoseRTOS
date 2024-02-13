@@ -8,8 +8,8 @@
  * @note:
  */
 
-#include "os_soft_timer.h"
 #include "board/os_board.h"
+#include "os_soft_timer.h"
 
 static volatile uint32_t _systick_times;
 static uint32_t _irq_times_s;
@@ -18,7 +18,7 @@ static soft_timer_t soft_timer[SOFT_TIMER_NUM];
 
 inline void os_soft_timer_systick_handle(void)
 {
-	_systick_times++;
+    _systick_times++;
 }
 
 inline void os_soft_timer_set_systick_times(const uint32_t new_st)
@@ -29,8 +29,7 @@ inline void os_soft_timer_set_systick_times(const uint32_t new_st)
 void os_soft_timer_init(void)
 {
     _irq_times_s = _systick_times;
-    for (uint32_t _i = 0; _i < SOFT_TIMER_NUM; ++_i)
-    {
+    for (uint32_t _i = 0; _i < SOFT_TIMER_NUM; ++_i) {
         soft_timer[_i]._soft_timer_state = SOFT_TIMER_STOPPED;
         soft_timer[_i]._soft_timer_mode = SOFT_TIMER_MODE_ONE_SHOT;
         soft_timer[_i]._due._ms = 0;
@@ -45,7 +44,7 @@ bool os_soft_timer_start(const uint32_t _id, const soft_timer_mode _mode, const 
 {
     if (_id >= SOFT_TIMER_NUM ||
         (_mode != SOFT_TIMER_MODE_ONE_SHOT &&
-        _mode != SOFT_TIMER_MODE_CYCLE) ||
+         _mode != SOFT_TIMER_MODE_CYCLE) ||
         soft_timer[_id]._soft_timer_state != SOFT_TIMER_STOPPED)
         return false;
     soft_timer[_id]._soft_timer_state = SOFT_TIMER_RUNNING;
@@ -59,15 +58,12 @@ bool os_soft_timer_start(const uint32_t _id, const soft_timer_mode _mode, const 
 
 void os_soft_timer_update(void)
 {
-    for (uint32_t _i = 0; _i < SOFT_TIMER_NUM; ++_i)
-    {
-        switch (soft_timer[_i]._soft_timer_state)
-        {
+    for (uint32_t _i = 0; _i < SOFT_TIMER_NUM; ++_i) {
+        switch (soft_timer[_i]._soft_timer_state) {
         case SOFT_TIMER_STOPPED:
             break;
         case SOFT_TIMER_RUNNING:
-            if (soft_timer_get_2_time_diff_us(soft_timer_get_time(), soft_timer[_i]._due) >= 0)
-            {
+            if (soft_timer_get_2_time_diff_us(soft_timer_get_time(), soft_timer[_i]._due) >= 0) {
                 soft_timer[_i]._soft_timer_state = SOFT_TIMER_TIMEOUT;
                 soft_timer[_i]._callback(soft_timer[_i]._argv);
             }
@@ -75,8 +71,7 @@ void os_soft_timer_update(void)
         case SOFT_TIMER_TIMEOUT:
             if (soft_timer[_i]._soft_timer_mode == SOFT_TIMER_MODE_ONE_SHOT)
                 soft_timer[_i]._soft_timer_state = SOFT_TIMER_STOPPED;
-            else
-            {
+            else {
                 soft_timer[_i]._due = soft_timer_add_us(soft_timer_get_time(), soft_timer[_i]._period);
                 soft_timer[_i]._soft_timer_state = SOFT_TIMER_RUNNING;
             }
@@ -101,8 +96,6 @@ inline soft_timer_state os_soft_timer_get_state(const uint32_t _id)
         return SOFT_TIMER_NO_STATE;
     return soft_timer[_id]._soft_timer_state;
 }
-
-
 
 // 获取从开始到现在的时间(单位:us). 不建议使用
 inline unsigned int sys_tick_get_us(void)

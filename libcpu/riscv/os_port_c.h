@@ -18,11 +18,11 @@ void os_clear_systick_flag(void);
 /*
  * _stack_size: byte
  * */
-unsigned int* os_process_stack_init(void* _fn_entry,
-									void* _arg,
-									void* _exit,
-									void* _stack_addr,
-									unsigned int _stack_size);
+unsigned int *os_process_stack_init(void *_fn_entry,
+                                    void *_arg,
+                                    void *_exit,
+                                    void *_stack_addr,
+                                    unsigned int _stack_size);
 unsigned int os_port_enter_critical(void);
 void os_port_exit_critical(unsigned int _state);
 void os_port_cpu_int_disable(void);
@@ -32,10 +32,10 @@ void os_port_init(void);
 /*
  * switch to interrupt stack
  * */
-#define GET_INT_MSP()   //asm("csrrw sp,mscratch,sp")
-#define FREE_INT_MSP()  //asm("csrrw sp,mscratch,sp")
+#define GET_INT_MSP()  asm("csrrw sp,mscratch,sp")
+#define FREE_INT_MSP() asm("csrrw sp,mscratch,sp")
 
-#define OS_ENTER_CRITICAL  unsigned int __critical_state__ = os_port_enter_critical();
-#define OS_EXIT_CRITICAL   os_port_exit_critical(__critical_state__);
+#define OS_ENTER_CRITICAL unsigned int __critical_state__ = os_port_enter_critical();
+#define OS_EXIT_CRITICAL  os_port_exit_critical(__critical_state__);
 
 #endif

@@ -2,7 +2,7 @@
 #ifndef _OS_MALLOC_H_
 #define _OS_MALLOC_H_
 
-/* ½»¸øÏµÍ³·ÖÅäµÄ×îĞ¡ÄÚ´æ´óĞ¡ */
+/* äº¤ç»™ç³»ç»Ÿåˆ†é…çš„æœ€å°å†…å­˜å¤§å° */
 #define OS_MALLOC_MIN_KEEP_SIZE   (1024)
 typedef unsigned int OS_MALLOC_HANDLE;
 void os_memory_init(void);

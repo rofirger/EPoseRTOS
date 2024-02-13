@@ -6,35 +6,35 @@
  * 2023-10-21     Feijie Luo   First version
  * @note:
  ***********************/
+#include "board/libcpu_headfile.h"
 #include "os_device.h"
 #include "string.h"
-#include "board/libcpu_headfile.h"
 
 static LIST_HEAD(__os_device_list);
 
-void os_kobject_init(struct os_kobject* ko, const char* name)
+void os_kobject_init(struct os_kobject *ko, const char *name)
 {
     if (NULL == ko)
         return;
-    unsigned int len = OS_NAME_MAX_LEN > strlen(name) ?
-            strlen(name) : OS_NAME_MAX_LEN;
+    unsigned int len = OS_NAME_MAX_LEN > strlen(name) ? strlen(name) : OS_NAME_MAX_LEN;
     memcpy(ko->_name, name, len);
     list_head_init(&ko->_list);
 }
 
-void os_kobject_deinit(struct os_kobject* ko)
+void os_kobject_deinit(struct os_kobject *ko)
 {
     list_del_init(&ko->_list);
 }
 
-struct os_device* os_device_find(const char* name)
+struct os_device *os_device_find(const char *name)
 {
-    struct list_head* curren_pos;
-    struct os_kobject* kobj;
-    struct os_device* dev;
+    struct list_head *curren_pos;
+    struct os_kobject *kobj;
+    struct os_device *dev;
 
     unsigned int _critical_state = os_port_enter_critical();
-    list_for_each(curren_pos, &__os_device_list){
+    list_for_each(curren_pos, &__os_device_list)
+    {
         kobj = os_list_entry(curren_pos, struct os_kobject, _list);
         if (strlen(name) == strlen(kobj->_name) &&
             strcmp(name, kobj->_name) == 0) {
@@ -47,14 +47,14 @@ struct os_device* os_device_find(const char* name)
     return NULL;
 }
 
-os_handle_state_t os_device_register(struct os_device* dev,
-                                     const char* name,
+os_handle_state_t os_device_register(struct os_device *dev,
+                                     const char *name,
                                      enum os_device_flag flag)
 {
     if (NULL == dev ||
         NULL == name)
         return OS_HANDLE_FAIL;
-    // 也不可以重名
+    //
     if (NULL != os_device_find(name))
         return OS_HANDLE_FAIL;
 
@@ -63,7 +63,7 @@ os_handle_state_t os_device_register(struct os_device* dev,
     dev->_ref_count = 0;
     dev->_open_flag = 0;
 
-    // 挂载
+    //
     unsigned int _critical_state = os_port_enter_critical();
 
     list_add_tail(&__os_device_list, &(dev->_kobject._list));
@@ -74,17 +74,17 @@ os_handle_state_t os_device_register(struct os_device* dev,
     return OS_HANDLE_SUCCESS;
 }
 
-__os_inline bool os_device_is_register(struct os_device* dev)
+__os_inline bool os_device_is_register(struct os_device *dev)
 {
     return ((dev->_flag & OS_DEVICE_REGISTER) != 0);
 }
 
-os_handle_state_t os_device_unregister(struct os_device* dev)
+os_handle_state_t os_device_unregister(struct os_device *dev)
 {
     if (NULL == dev)
         return OS_HANDLE_FAIL;
 
-    // 卸载
+    //
     unsigned int _critical_state = os_port_enter_critical();
 
     dev->_flag &= (~OS_DEVICE_REGISTER);
@@ -95,7 +95,7 @@ os_handle_state_t os_device_unregister(struct os_device* dev)
     return OS_HANDLE_SUCCESS;
 }
 
-os_handle_state_t os_device_init(struct os_device* dev)
+os_handle_state_t os_device_init(struct os_device *dev)
 {
     if (NULL == dev)
         return OS_HANDLE_FAIL;
@@ -116,7 +116,7 @@ os_handle_state_t os_device_init(struct os_device* dev)
     return OS_HANDLE_FAIL;
 }
 
-os_handle_state_t os_device_open(struct os_device* dev, enum os_device_flag open_flag)
+os_handle_state_t os_device_open(struct os_device *dev, enum os_device_flag open_flag)
 {
     if (NULL == dev)
         return OS_HANDLE_FAIL;
@@ -124,7 +124,6 @@ os_handle_state_t os_device_open(struct os_device* dev, enum os_device_flag open
     if (!(dev->_flag & OS_DEVICE_INIT))
         if (OS_HANDLE_FAIL == os_device_init(dev))
             return OS_HANDLE_FAIL;
-
 
     if (NULL != dev->_file_ops.open)
         if (OS_HANDLE_SUCCESS == dev->_file_ops.open(dev, open_flag)) {
@@ -136,7 +135,7 @@ os_handle_state_t os_device_open(struct os_device* dev, enum os_device_flag open
     return OS_HANDLE_FAIL;
 }
 
-os_handle_state_t os_device_close(struct os_device* dev)
+os_handle_state_t os_device_close(struct os_device *dev)
 {
     if (NULL == dev)
         return OS_HANDLE_FAIL;
@@ -158,9 +157,9 @@ os_handle_state_t os_device_close(struct os_device* dev)
     return OS_HANDLE_FAIL;
 }
 
-size_t os_device_read(struct os_device* dev,
+size_t os_device_read(struct os_device *dev,
                       os_off_t pos,
-                      void* buffer,
+                      void *buffer,
                       os_size_t size)
 {
     if (NULL == dev)
@@ -170,17 +169,17 @@ size_t os_device_read(struct os_device* dev,
         return 0;
 
     if (NULL != dev->_file_ops.read &&
-            (OS_DEVICE_READ & dev->_open_flag != 0)) {
+        (OS_DEVICE_READ & dev->_open_flag) != 0) {
         return dev->_file_ops.read(dev, pos, buffer, size);
     }
 
     return 0;
 }
 
- size_t os_device_write(struct os_device* dev,
-                      os_off_t pos,
-                      const void* buffer,
-                      os_size_t size)
+size_t os_device_write(struct os_device *dev,
+                       os_off_t pos,
+                       const void *buffer,
+                       os_size_t size)
 {
     if (NULL == dev)
         return 0;
@@ -189,14 +188,14 @@ size_t os_device_read(struct os_device* dev,
         return 0;
 
     if (NULL != dev->_file_ops.write &&
-            (OS_DEVICE_WRITE & dev->_open_flag != 0)) {
+        (OS_DEVICE_WRITE & dev->_open_flag) != 0) {
         return dev->_file_ops.write(dev, pos, buffer, size);
     }
 
     return 0;
 }
 
-os_handle_state_t os_device_ioctl(struct os_device* dev, int cmd, void* buffer)
+os_handle_state_t os_device_ioctl(struct os_device *dev, int cmd, void *buffer)
 {
     if (NULL == dev)
         return 0;
@@ -209,8 +208,7 @@ os_handle_state_t os_device_ioctl(struct os_device* dev, int cmd, void* buffer)
     return OS_HANDLE_FAIL;
 }
 
-
-os_handle_state_t os_device_rx_indicate(struct os_device* dev, os_size_t size)
+os_handle_state_t os_device_rx_indicate(struct os_device *dev, os_size_t size)
 {
     if (NULL == dev)
         return OS_HANDLE_FAIL;
@@ -224,7 +222,7 @@ os_handle_state_t os_device_rx_indicate(struct os_device* dev, os_size_t size)
     return OS_HANDLE_SUCCESS;
 }
 
-os_handle_state_t os_device_tx_complete(struct os_device* dev, void* buffer)
+os_handle_state_t os_device_tx_complete(struct os_device *dev, void *buffer)
 {
     if (NULL == dev)
         return OS_HANDLE_FAIL;
@@ -238,8 +236,8 @@ os_handle_state_t os_device_tx_complete(struct os_device* dev, void* buffer)
     return OS_HANDLE_SUCCESS;
 }
 
-os_handle_state_t os_device_set_rx_indicate(struct os_device* dev,
-               os_handle_state_t (*rx_indicate)(struct os_device* dev, os_size_t size))
+os_handle_state_t os_device_set_rx_indicate(struct os_device *dev,
+                                            os_handle_state_t (*rx_indicate)(struct os_device *dev, os_size_t size))
 {
     if (NULL == dev)
         return OS_HANDLE_FAIL;
@@ -249,8 +247,8 @@ os_handle_state_t os_device_set_rx_indicate(struct os_device* dev,
     return OS_HANDLE_SUCCESS;
 }
 
-os_handle_state_t os_device_set_tx_complete(struct os_device* dev,
-               os_handle_state_t (*tx_complete)(struct os_device* dev, void* buffer))
+os_handle_state_t os_device_set_tx_complete(struct os_device *dev,
+                                            os_handle_state_t (*tx_complete)(struct os_device *dev, void *buffer))
 {
     if (NULL == dev)
         return OS_HANDLE_FAIL;
@@ -258,7 +256,4 @@ os_handle_state_t os_device_set_tx_complete(struct os_device* dev,
     dev->tx_complete = tx_complete;
 
     return OS_HANDLE_SUCCESS;
-
 }
-
-
