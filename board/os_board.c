@@ -93,8 +93,10 @@ os_handle_state_t sys_uart_rx_indicate(struct os_device *dev, os_size_t size)
 {
 #ifdef CONFIG_FISH
     static char sys_uart_tmp_rec_char;
-    uart_receive_byte(SYS_UART, &sys_uart_tmp_rec_char);
-    return os_fish_irq_handle_callback((unsigned int)sys_uart_tmp_rec_char);
+    if (status_success == uart_receive_byte(SYS_UART, &sys_uart_tmp_rec_char))
+        return os_fish_irq_handle_callback((unsigned int)sys_uart_tmp_rec_char);
+    else 
+        return OS_HANDLE_FAIL;
 #else
     return OS_HANDLE_FAIL;
 #endif

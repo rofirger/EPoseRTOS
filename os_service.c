@@ -20,8 +20,8 @@
 #include "os_sched.h"
 #include "os_service.h"
 #include "stdarg.h"
-#include "stdio.h"
 #include "string.h"
+#include "os_soft_timer.h"
 
 #ifdef CONFIG_FISH
 
@@ -34,7 +34,7 @@ struct os_fish_inp_nd {
 static LIST_HEAD(__os_service_tin_list);
 static unsigned char __os_service_tin_list_len;
 
-// Every complete command(End with the 'Enter' key) can be sent to this mq.
+// Every complete command(End with the 'CR (Carriage Return)' key) can be sent to this mq.
 static struct os_mqueue __os_fish_inp_mq;
 // Every typed key can be sent to this mq.
 static struct os_mqueue __os_fish_step_inp_mq;
@@ -490,28 +490,29 @@ static void __kthread_terminal(void *_arg)
 __os_static os_handle_state_t os_fish_irq_handle_default_fn(unsigned int rec)
 {
     static struct os_service_fish_input _uart_irq_get;
+    static unsigned char combination_keys[5];
+    static unsigned char combination_keys_index;
+    static struct jiffies_structure last_jiffies;
+    static unsigned char del_char = 127;
+
     switch (rec) {
-    case 13: //
+    case 13:  // CR (Carriage Return)
         os_mqueue_send(os_get_fish_input_mq(), (void *)(&_uart_irq_get),
                        sizeof(struct os_service_fish_input), OS_MQUEUE_NO_WAIT);
         memset(_uart_irq_get.data, 0, OS_SERVICE_FISH_MSG_MAX_SIZE);
         _uart_irq_get.size = 0;
         //
         break;
-    case 127: //
+    case 127: // DEL (Delete)
         if (_uart_irq_get.size == 0)
             break;
         _uart_irq_get.data[_uart_irq_get.size] = 0;
         _uart_irq_get.size--;
         os_device_write(os_get_sys_uart_device_handle(), 0, (void *)&rec, 2);
         break;
-    case 38: //
+    case 9:  // tab
         break;
-    case 40: //
-        break;
-    case 37: //
-        break;
-    case 39: //
+    case 27:
         break;
     default:
         _uart_irq_get.data[_uart_irq_get.size] = rec;
@@ -519,6 +520,36 @@ __os_static os_handle_state_t os_fish_irq_handle_default_fn(unsigned int rec)
         os_device_write(os_get_sys_uart_device_handle(), 0, (void *)&rec, 2);
         break;
     }
+    if (combination_keys_index == 0 || 
+        jiffies.c - last_jiffies.c < 300) {
+        combination_keys[combination_keys_index++] = (unsigned char)rec;
+        if (combination_keys_index == 3) {
+            _uart_irq_get.size -= 2;
+            os_device_write(os_get_sys_uart_device_handle(), 0, (void *)&del_char, 1);
+            os_device_write(os_get_sys_uart_device_handle(), 0, (void *)&del_char, 1);
+            if (combination_keys[0] == 27 && 
+                combination_keys[1] == 91) {
+                switch(combination_keys[2]) {
+                case 'A': // up
+                    break;
+                case 'B': // buttom
+                    break;
+                case 'C': // left
+                    break;
+                case 'D': // right
+                    break;
+                default:
+                    break;
+                }
+            }
+            combination_keys_index = 0;
+
+        }
+    } else {
+        combination_keys_index = 0;
+    }
+    last_jiffies = jiffies;
+
     return OS_HANDLE_SUCCESS;
 }
 

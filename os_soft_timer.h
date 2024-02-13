@@ -49,6 +49,13 @@ typedef struct soft_timer_t {
     soft_timer_callback _callback;
     void *_argv;
 } soft_timer_t;
+
+struct jiffies_structure {
+    uint32_t c; 
+    // bc plus 1 when c reaches the max value of uint32_t
+    uint32_t bc;
+};
+
 void os_soft_timer_set_systick_times(const uint32_t new_st);
 void os_soft_timer_systick_handle(void);
 void os_soft_timer_init(void);
@@ -63,5 +70,7 @@ soft_timer_time_t soft_timer_add_us(const soft_timer_time_t _time, const uint32_
 int soft_timer_get_2_time_diff_us(const soft_timer_time_t _e, const soft_timer_time_t _s);
 
 #define os_soft_timer_reset_systick_times() os_soft_timer_set_systick_times(0)
+
+extern struct jiffies_structure jiffies;
 
 #endif

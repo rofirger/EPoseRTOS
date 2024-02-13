@@ -11,24 +11,26 @@
 #include "board/os_board.h"
 #include "os_soft_timer.h"
 
-static volatile uint32_t _systick_times;
 static uint32_t _irq_times_s;
+struct jiffies_structure jiffies;
 
 static soft_timer_t soft_timer[SOFT_TIMER_NUM];
 
 inline void os_soft_timer_systick_handle(void)
 {
-    _systick_times++;
+    jiffies.c++;
+    if (jiffies.c == 0)
+        jiffies.bc++;
 }
 
 inline void os_soft_timer_set_systick_times(const uint32_t new_st)
 {
-    _systick_times = new_st;
+    jiffies.c = new_st;
 }
 
 void os_soft_timer_init(void)
 {
-    _irq_times_s = _systick_times;
+    _irq_times_s = jiffies.c;
     for (uint32_t _i = 0; _i < SOFT_TIMER_NUM; ++_i) {
         soft_timer[_i]._soft_timer_state = SOFT_TIMER_STOPPED;
         soft_timer[_i]._soft_timer_mode = SOFT_TIMER_MODE_ONE_SHOT;
@@ -100,7 +102,7 @@ inline soft_timer_state os_soft_timer_get_state(const uint32_t _id)
 // 获取从开始到现在的时间(单位:us). 不建议使用
 inline unsigned int sys_tick_get_us(void)
 {
-    return (CLOCK_COUNT_TO_US(os_hw_systick_get_reload() - os_hw_systick_get_val(), CONFIG_SYSTICK_CLOCK_FREQUENCY) + (_systick_times - _irq_times_s) * CLOCK_COUNT_TO_US(os_hw_systick_get_reload(), CONFIG_SYSTICK_CLOCK_FREQUENCY));
+    return (CLOCK_COUNT_TO_US(os_hw_systick_get_reload() - os_hw_systick_get_val(), CONFIG_SYSTICK_CLOCK_FREQUENCY) + (jiffies.c - _irq_times_s) * CLOCK_COUNT_TO_US(os_hw_systick_get_reload(), CONFIG_SYSTICK_CLOCK_FREQUENCY));
 }
 
 soft_timer_time_t soft_timer_get_time(void)
@@ -108,7 +110,7 @@ soft_timer_time_t soft_timer_get_time(void)
     soft_timer_time_t _ret;
     float _one_iqr_ms = CLOCK_COUNT_TO_US(os_hw_systick_get_reload(), CONFIG_SYSTICK_CLOCK_FREQUENCY) / 1000.0f;
     float _ret_ms = CLOCK_COUNT_TO_US(os_hw_systick_get_reload() - os_hw_systick_get_val(), CONFIG_SYSTICK_CLOCK_FREQUENCY) / 1000.0f;
-    float _total_ms = _one_iqr_ms * (_systick_times - _irq_times_s) + _ret_ms;
+    float _total_ms = _one_iqr_ms * (jiffies.c - _irq_times_s) + _ret_ms;
     _ret._ms = (uint32_t)_total_ms;
     _ret._us = (uint32_t)((_total_ms - (uint32_t)_total_ms) * 1000.0f);
     return _ret;
