@@ -94,13 +94,14 @@ inline void os_cpu_set_running(void)
 /* 线程退出 */
 __os_static void __os_task_exit_handle(void)
 {
-    unsigned int _state = os_port_enter_critical();
+    OS_ENTER_CRITICAL
+
     struct task_control_block *_ct_tcb = os_get_current_task_tcb();
     // 清除id
     _os_id_tcb_tab[_ct_tcb->_task_id] = NULL;
     // 将线程从就绪队列中清除
     os_rq_del_task(_ct_tcb);
-    os_port_exit_critical(_state);
+    OS_EXIT_CRITICAL
     // 执行调度
     __os_sched();
 }
@@ -119,7 +120,8 @@ os_handle_state_t os_task_create(struct task_control_block *_task_tcb,
         _prio > OS_TASK_MAX_PRIORITY)
         return OS_HANDLE_FAIL;
 
-    unsigned int _last_critical_state = os_port_enter_critical();
+    OS_ENTER_CRITICAL
+
     unsigned int _tmp_id = OS_TASK_MAX_ID + 1;
 
     for (unsigned int _i = 0; _i <= OS_TASK_MAX_ID; ++_i) {
@@ -129,7 +131,7 @@ os_handle_state_t os_task_create(struct task_control_block *_task_tcb,
         }
     }
     if (_tmp_id > OS_TASK_MAX_ID) {
-        os_port_exit_critical(_last_critical_state);
+        OS_EXIT_CRITICAL
         return OS_HANDLE_FAIL;
     }
     _os_id_tcb_tab[_tmp_id] = _task_tcb;
@@ -154,7 +156,7 @@ os_handle_state_t os_task_create(struct task_control_block *_task_tcb,
 
     // 加入优先级队列
     os_rq_add_task(_task_tcb);
-    os_port_exit_critical(_last_critical_state);
+    OS_EXIT_CRITICAL
 
     // 	调度
     __os_sched();

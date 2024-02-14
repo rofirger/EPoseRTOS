@@ -91,30 +91,30 @@ os_mutex_handle_state_t os_mutex_try_lock(struct os_mutex *_mutex)
 {
     if (NULL == _mutex)
         return OS_MUTEX_HANDLE_LOCK_FAIL;
-    unsigned int _critical_state = os_port_enter_critical();
+    OS_ENTER_CRITICAL
 
     // 如果锁不存在拥有者，则将当前运行的任务置为该锁的拥有者
     if (!os_mutex_is_owned(_mutex)) {
         __mutex_owner_change(_mutex, os_get_current_task_tcb());
-        os_port_exit_critical(_critical_state);
+        OS_EXIT_CRITICAL
         return OS_MUTEX_HANDLE_GET_OWNER;
     }
     if (os_mutex_is_self(_mutex)) {
         if (os_mutex_is_recursive(_mutex)) {
             if (_mutex->_lock_nesting < OS_MUTEX_MAX_RECURSIVE) {
                 _mutex->_lock_nesting++;
-                os_port_exit_critical(_critical_state);
+                OS_EXIT_CRITICAL
                 return OS_MUTEX_HANDLE_RECURSIVE_SUECCESS;
             }
-            os_port_exit_critical(_critical_state);
+            OS_EXIT_CRITICAL
             return OS_MUTEX_HANDLE_RECURSIVE_FAIL;
         } else {
-            os_port_exit_critical(_critical_state);
+            OS_EXIT_CRITICAL
             return OS_MUTEX_HANDLE_GET_OWNER;
         }
     }
 
-    os_port_exit_critical(_critical_state);
+    OS_EXIT_CRITICAL
     return OS_MUTEX_HANDLE_OTHER_OWNER;
 }
 
@@ -126,7 +126,7 @@ os_handle_state_t os_mutex_lock(struct os_mutex *_mutex, unsigned int time_out)
     if (NULL == _mutex)
         return OS_HANDLE_FAIL;
 
-    unsigned int _critical_state = os_port_enter_critical();
+    OS_ENTER_CRITICAL
 
     os_mutex_handle_state_t _mutex_handle_state;
     _mutex_handle_state = os_mutex_try_lock(_mutex);
@@ -140,7 +140,7 @@ os_handle_state_t os_mutex_lock(struct os_mutex *_mutex, unsigned int time_out)
         // 将当前任务挂起
         os_add_tick_task(_current_task_tcb, time_out, &(_mutex->_block_obj));
 
-        os_port_exit_critical(_critical_state);
+        OS_EXIT_CRITICAL
         // 展开调度
         __os_sched();
 
@@ -148,22 +148,22 @@ os_handle_state_t os_mutex_lock(struct os_mutex *_mutex, unsigned int time_out)
         while (os_task_is_block(_current_task_tcb)) {
         };
 
-        _critical_state = os_port_enter_critical();
+        OS_ENTER_CRITICAL
 
         // 超时
         if (_current_task_tcb->_task_block_state == OS_TASK_BLOCK_TIMEOUT) {
             _current_task_tcb->_task_block_state = OS_TASK_BLOCK_NONE;
-            os_port_exit_critical(_critical_state);
+            OS_EXIT_CRITICAL
             return OS_HANDLE_FAIL;
         } else {
             _current_task_tcb->_task_block_state = OS_TASK_BLOCK_NONE;
             __mutex_owner_change(_mutex, _current_task_tcb);
-            os_port_exit_critical(_critical_state);
+            OS_EXIT_CRITICAL
             return OS_HANDLE_SUCCESS;
         }
     }
 
-    os_port_exit_critical(_critical_state);
+    OS_EXIT_CRITICAL
     if (_mutex_handle_state == OS_MUTEX_HANDLE_GET_OWNER ||
         _mutex_handle_state == OS_MUTEX_HANDLE_RECURSIVE_SUECCESS)
         return OS_HANDLE_SUCCESS;
@@ -185,16 +185,16 @@ os_handle_state_t os_mutex_unlock(struct os_mutex *_mutex)
     if (NULL == _mutex)
         return OS_HANDLE_FAIL;
 
-    unsigned int _critical_state = os_port_enter_critical();
+    OS_ENTER_CRITICAL
 
     // 如果锁不为自己所有, 则返回
     if (!os_mutex_is_self(_mutex)) {
-        os_port_exit_critical(_critical_state);
+        OS_EXIT_CRITICAL
         return OS_HANDLE_FAIL;
     }
 
     if (_mutex->_mutex_type == OS_MUTEX_RECURSIVE && --_mutex->_lock_nesting > 0) {
-        os_port_exit_critical(_critical_state);
+        OS_EXIT_CRITICAL
         return OS_HANDLE_SUCCESS;
     }
 
@@ -202,12 +202,12 @@ os_handle_state_t os_mutex_unlock(struct os_mutex *_mutex)
 
     // 查看锁链表上是否存在任务
     if (os_mutex_block_is_empty(_mutex)) {
-        os_port_exit_critical(_critical_state);
+        OS_EXIT_CRITICAL
         return OS_HANDLE_SUCCESS;
     }
     // 唤醒锁阻塞队列中的第一个任务
     os_block_wakeup_first_task(&_mutex->_block_obj, __os_mutex_wakeup_task_cb);
-    os_port_exit_critical(_critical_state);
+    OS_EXIT_CRITICAL
     // 调度
     __os_sched();
     return OS_HANDLE_SUCCESS;
@@ -220,7 +220,7 @@ os_mutex_handle_state_t os_mutex_destory(struct os_mutex *_mutex)
 {
     if (NULL == _mutex)
         return OS_MUTEX_HANDLE_DESTORY_FAIL;
-    unsigned int _critical_state = os_port_enter_critical();
+    OS_ENTER_CRITICAL
 
     // 如果该锁被任务所拥有则释放锁主
     if (os_mutex_is_owned(_mutex))
@@ -230,7 +230,7 @@ os_mutex_handle_state_t os_mutex_destory(struct os_mutex *_mutex)
     if (!os_mutex_block_is_empty(_mutex))
         os_block_wakeup_all_task(&_mutex->_block_obj);
     os_block_deinit(&_mutex->_block_obj);
-    os_port_exit_critical(_critical_state);
+    OS_EXIT_CRITICAL
     // 调度
     __os_sched();
     return OS_MUTEX_HANDLE_DESTORY_SUCCESS;

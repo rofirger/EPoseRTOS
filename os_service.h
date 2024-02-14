@@ -78,5 +78,5 @@ void os_service_init(void);
 
 void os_printk_flush();
 void os_printk(const char *fmt, ...);
-
+void os_fish_clear_input_buffer(bool is_clear_screen);
 #endif

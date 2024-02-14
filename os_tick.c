@@ -115,11 +115,11 @@ __os_static void os_tick_del_all_task(struct os_tick *ptr_tick, void (*callback)
 /* 任务 tick 轮询 */
 void os_task_tick_poll(void)
 {
-    unsigned int _critical_state = os_port_enter_critical();
+    OS_ENTER_CRITICAL
     // os_sys_enter_irq();
     if (list_empty(&_os_tick_list_head)) {
         // os_sys_exit_irq();
-        os_port_exit_critical(_critical_state);
+        OS_EXIT_CRITICAL
         return;
     }
     struct os_tick *_current_tick_node = NULL;
@@ -127,7 +127,7 @@ void os_task_tick_poll(void)
     --(_current_tick_node->_tick_count);
     if (_current_tick_node->_tick_count > 0) {
         // os_sys_exit_irq();
-        os_port_exit_critical(_critical_state);
+        OS_EXIT_CRITICAL
         return;
     }
 
@@ -145,7 +145,7 @@ void os_task_tick_poll(void)
         os_tick_del_all_task(_current_tick_node, tick_tcb_time_out_cb);
     }
     // os_sys_exit_irq();
-    os_port_exit_critical(_critical_state);
+    OS_EXIT_CRITICAL
     // 调度
     __os_sched();
 }
@@ -155,11 +155,11 @@ void os_task_delay_ms(unsigned int _tick_ms)
 {
     if (_tick_ms == 0)
         return;
-    unsigned int _critical_state = os_port_enter_critical();
+    OS_ENTER_CRITICAL
     struct task_control_block *_current_task_tcb = os_get_current_task_tcb();
     // 加入延时队列
     os_add_tick_task(_current_task_tcb, _tick_ms, NULL);
-    os_port_exit_critical(_critical_state);
+    OS_EXIT_CRITICAL
     // 调度开启
     __os_sched();
 }

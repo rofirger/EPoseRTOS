@@ -32,18 +32,19 @@ struct os_device *os_device_find(const char *name)
     struct os_kobject *kobj;
     struct os_device *dev;
 
-    unsigned int _critical_state = os_port_enter_critical();
+    OS_ENTER_CRITICAL
+
     list_for_each(curren_pos, &__os_device_list)
     {
         kobj = os_list_entry(curren_pos, struct os_kobject, _list);
         if (strlen(name) == strlen(kobj->_name) &&
             strcmp(name, kobj->_name) == 0) {
             dev = os_container_of(kobj, struct os_device, _kobject);
-            os_port_exit_critical(_critical_state);
+            OS_EXIT_CRITICAL
             return dev;
         }
     }
-    os_port_exit_critical(_critical_state);
+    OS_EXIT_CRITICAL
     return NULL;
 }
 
@@ -63,13 +64,12 @@ os_handle_state_t os_device_register(struct os_device *dev,
     dev->_ref_count = 0;
     dev->_open_flag = 0;
 
-    //
-    unsigned int _critical_state = os_port_enter_critical();
+    OS_ENTER_CRITICAL
 
     list_add_tail(&__os_device_list, &(dev->_kobject._list));
     dev->_flag |= OS_DEVICE_REGISTER;
 
-    os_port_exit_critical(_critical_state);
+    OS_EXIT_CRITICAL
 
     return OS_HANDLE_SUCCESS;
 }
@@ -84,13 +84,12 @@ os_handle_state_t os_device_unregister(struct os_device *dev)
     if (NULL == dev)
         return OS_HANDLE_FAIL;
 
-    //
-    unsigned int _critical_state = os_port_enter_critical();
+    OS_ENTER_CRITICAL
 
     dev->_flag &= (~OS_DEVICE_REGISTER);
     os_kobject_deinit(&dev->_kobject);
 
-    os_port_exit_critical(_critical_state);
+    OS_EXIT_CRITICAL
 
     return OS_HANDLE_SUCCESS;
 }

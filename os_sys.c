@@ -28,6 +28,7 @@ static unsigned char _os_iqr_nesting;
 void os_idle_task(void *_arg)
 {
     while (1) {
+        OS_WFI;
     }
 }
 
@@ -93,11 +94,11 @@ bool os_sys_is_in_irq(void)
 /* 进入中断, 此函数用于当系统处在中断函数中时禁止实时系统调度 */
 void os_sys_enter_irq(void)
 {
-    unsigned int _critical_state = os_port_enter_critical();
+    OS_ENTER_CRITICAL
     if (os_cpu_is_running() &&
         _os_iqr_nesting < 255)
         _os_iqr_nesting++;
-    os_port_exit_critical(_critical_state);
+    OS_EXIT_CRITICAL
 }
 
 /* 退出中断 */
@@ -105,9 +106,9 @@ void os_sys_exit_irq(void)
 {
     if (os_cpu_is_running() &&
         os_sys_is_in_irq()) {
-        unsigned int _critical_state = os_port_enter_critical();
+        OS_ENTER_CRITICAL
         _os_iqr_nesting--;
-        os_port_exit_critical(_critical_state);
+        OS_EXIT_CRITICAL
     }
 }
 

@@ -35,6 +35,16 @@ void os_port_init(void);
 #define GET_INT_MSP()  asm("csrrw sp,mscratch,sp")
 #define FREE_INT_MSP() asm("csrrw sp,mscratch,sp")
 
+/*
+ * Wait For Interrupt. 
+ * Used to reduce the power consumption of the processor.
+ * This "define" can be empty.
+ */
+#define OS_WFI                        \
+        do{                           \
+              asm volatile("wfi");  \
+        } while (0)
+
 #define OS_ENTER_CRITICAL unsigned int __critical_state__ = os_port_enter_critical();
 #define OS_EXIT_CRITICAL  os_port_exit_critical(__critical_state__);
 

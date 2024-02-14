@@ -43,6 +43,9 @@ static struct os_mqueue __os_fish_step_inp_mq;
 static fish_irq_handle fish_irq_handle_vector[FISH_IRQ_HANDLE_SIZE];
 static enum os_fish_irq_handle fish_irq_handle_vec_index;
 
+// input buffer
+static struct os_service_fish_input input_buffer;
+
 // FISH thread configuration.
 #define FISH_TASK_PRIO       (OS_KTHREAD_FISH_PRIO)
 #define FISH_TASK_STACK_SIZE (3072)
@@ -348,6 +351,18 @@ __os_inline void os_printk_flush()
 
 #ifdef CONFIG_FISH
 
+void os_fish_clear_input_buffer(bool is_clear_screen)
+{
+    static unsigned char del_char = 127;
+    static struct os_device *handle;
+    handle = os_get_sys_uart_device_handle();
+    if (is_clear_screen)
+        while(input_buffer.size-- != 0)
+            os_device_write(handle, 0, (void *)&del_char, 1);
+    else
+      input_buffer.size = 0;
+}
+
 __os_static cmd_call_ptr __os_get_cmd_call(char *cmd, unsigned int size)
 {
     struct os_fish_cmd_structure *cmd_structure;
@@ -489,25 +504,25 @@ static void __kthread_terminal(void *_arg)
 
 __os_static os_handle_state_t os_fish_irq_handle_default_fn(unsigned int rec)
 {
-    static struct os_service_fish_input _uart_irq_get;
+    
     static unsigned char combination_keys[5];
     static unsigned char combination_keys_index;
     static struct jiffies_structure last_jiffies;
-    static unsigned char del_char = 127;
+    
 
     switch (rec) {
     case 13:  // CR (Carriage Return)
-        os_mqueue_send(os_get_fish_input_mq(), (void *)(&_uart_irq_get),
+        os_mqueue_send(os_get_fish_input_mq(), (void *)(&input_buffer),
                        sizeof(struct os_service_fish_input), OS_MQUEUE_NO_WAIT);
-        memset(_uart_irq_get.data, 0, OS_SERVICE_FISH_MSG_MAX_SIZE);
-        _uart_irq_get.size = 0;
+        memset(input_buffer.data, 0, OS_SERVICE_FISH_MSG_MAX_SIZE);
+        input_buffer.size = 0;
         //
         break;
     case 127: // DEL (Delete)
-        if (_uart_irq_get.size == 0)
+        if (input_buffer.size == 0)
             break;
-        _uart_irq_get.data[_uart_irq_get.size] = 0;
-        _uart_irq_get.size--;
+        input_buffer.data[input_buffer.size] = 0;
+        input_buffer.size--;
         os_device_write(os_get_sys_uart_device_handle(), 0, (void *)&rec, 2);
         break;
     case 9:  // tab
@@ -515,8 +530,8 @@ __os_static os_handle_state_t os_fish_irq_handle_default_fn(unsigned int rec)
     case 27:
         break;
     default:
-        _uart_irq_get.data[_uart_irq_get.size] = rec;
-        _uart_irq_get.size++;
+        input_buffer.data[input_buffer.size] = rec;
+        input_buffer.size++;
         os_device_write(os_get_sys_uart_device_handle(), 0, (void *)&rec, 2);
         break;
     }
@@ -524,7 +539,8 @@ __os_static os_handle_state_t os_fish_irq_handle_default_fn(unsigned int rec)
         jiffies.c - last_jiffies.c < 300) {
         combination_keys[combination_keys_index++] = (unsigned char)rec;
         if (combination_keys_index == 3) {
-            _uart_irq_get.size -= 2;
+            static unsigned char del_char = 127;
+            input_buffer.size -= 2;
             os_device_write(os_get_sys_uart_device_handle(), 0, (void *)&del_char, 1);
             os_device_write(os_get_sys_uart_device_handle(), 0, (void *)&del_char, 1);
             if (combination_keys[0] == 27 && 
@@ -632,8 +648,8 @@ __os_static OS_CMD_PROCESS_FN(list_cmd)
 }
 
 OS_CMD_EXPORT(hello, hello_world, "Hello wolrd.");
-OS_CMD_EXPORT(readcmdcap, read_cmd_cap, "Read the buffer size of the command that executed.");
-OS_CMD_EXPORT(clearcmd, clear_cmd_history, "Clear the buffer for the command that executed.");
+OS_CMD_EXPORT(readcmdcap, read_cmd_cap, "Read the buffer size of the commands that executed.");
+OS_CMD_EXPORT(clearcmd, clear_cmd_history, "Clear the buffer for the commands that executed.");
 OS_CMD_EXPORT(help, list_cmd, "Help?");
 #endif
 
