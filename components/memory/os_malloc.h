@@ -2,7 +2,10 @@
 #ifndef _OS_MALLOC_H_
 #define _OS_MALLOC_H_
 
-/* 交给系统分配的最小内存大小 */
+/** 
+ * The minimum memory size required to construct 
+ * the kernel-recognizable memory data structure for the os_malloc_keep() function. 
+ */
 #define OS_MALLOC_MIN_KEEP_SIZE   (1024)
 typedef unsigned int OS_MALLOC_HANDLE;
 void os_memory_init(void);

@@ -62,17 +62,14 @@ os_handle_state_t os_mqueue_send(struct os_mqueue *mq,
         }
 
         struct task_control_block *_current_task_tcb = os_get_current_task_tcb();
-        //
         os_add_tick_task(_current_task_tcb, time_out, &mq->_suspend);
         OS_EXIT_CRITICAL
         __os_sched();
-        //
         while (os_task_is_block(_current_task_tcb)) {
         };
 
         OS_ENTER_CRITICAL
 
-        //
         if (_current_task_tcb->_task_block_state == OS_TASK_BLOCK_TIMEOUT) {
             _current_task_tcb->_task_block_state = OS_TASK_BLOCK_NONE;
             OS_EXIT_CRITICAL
@@ -80,7 +77,6 @@ os_handle_state_t os_mqueue_send(struct os_mqueue *mq,
         } else {
             _current_task_tcb->_task_block_state = OS_TASK_BLOCK_NONE;
             OS_EXIT_CRITICAL
-            //
         }
     }
 
@@ -94,7 +90,6 @@ os_handle_state_t os_mqueue_send(struct os_mqueue *mq,
     //  mq
     list_add_tail(&mq->_msg_queue, &mq_pack->_q_nd);
     mq->_num_msgs++;
-    //
     os_block_wakeup_first_task(&mq->_suspend, __os_mqueue_send_cb);
 
     OS_EXIT_CRITICAL

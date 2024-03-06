@@ -6,7 +6,7 @@
  * 2023-10-11     Feijie Luo   Support RISC-V MCU platform
  * @note: 32bit risc-v mcu
  ***********************/
-#include "../../os_config.h"
+#include "../../../os_config.h"
 .global SW_Handler
 .align 2
 SW_Handler:

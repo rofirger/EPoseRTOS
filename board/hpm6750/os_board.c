@@ -7,15 +7,17 @@
  * @note: 32bit risc-v mcu
  ***********************/
 
-#include "../os_headfile.h"
+#include "../../os_headfile.h"
 #include "board.h"
 #include "hpm_clock_drv.h"
 #include "hpm_mchtmr_drv.h"
 #include "hpm_pmp_drv.h"
 #include "hpm_sysctl_drv.h"
 #include "hpm_uart_drv.h"
-#include "os_board.h"
+#include "../os_board.h"
 #include "string.h"
+#include "hpm_common.h"
+#include "hpm_soc.h"
 
 /********************* systick *********************/
 static void os_hw_systick_init(const uint64_t _reload_tick)
@@ -31,12 +33,12 @@ static void os_hw_systick_init(const uint64_t _reload_tick)
     mchtmr_set_compare_value(HPM_MCHTMR, _reload_tick);
 }
 
-inline uint64_t os_hw_systick_get_reload(void)
+inline unsigned long os_hw_systick_get_reload(void)
 {
-    return CLOCK_COUNT_TO_MS(CONFIG_SYSTICK_CLOCK_FREQUENCY, 1);
+    return (unsigned long)CLOCK_COUNT_TO_MS(CONFIG_SYSTICK_CLOCK_FREQUENCY, 1);
 }
 
-inline uint64_t os_hw_systick_get_val(void)
+inline unsigned long os_hw_systick_get_val(void)
 {
     return mchtmr_get_count(HPM_MCHTMR);
 }
@@ -134,11 +136,16 @@ static void sys_uart_register(void)
 
 /********************* system uart *********************/
 const uint32_t SYSTICK_RELOAD_VAL = (MS_TO_CLOCK_COUNT(1, CONFIG_SYSTICK_CLOCK_FREQUENCY));
+void os_set_sys_heap_head(void* ptr);
+static unsigned char tmp_mem[CONFIG_HEAP_SIZE];
 void os_board_init(void)
 {
     board_init_clock();
     board_init_pmp();
     // board_init_ahb();
+
+    // init heap
+    os_set_sys_heap_head(tmp_mem);
 
     /* systick */
     os_hw_systick_init(SYSTICK_RELOAD_VAL);

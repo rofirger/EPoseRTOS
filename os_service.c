@@ -516,7 +516,6 @@ __os_static os_handle_state_t os_fish_irq_handle_default_fn(unsigned int rec)
                        sizeof(struct os_service_fish_input), OS_MQUEUE_NO_WAIT);
         memset(input_buffer.data, 0, OS_SERVICE_FISH_MSG_MAX_SIZE);
         input_buffer.size = 0;
-        //
         break;
     case 127: // DEL (Delete)
         if (input_buffer.size == 0)
@@ -536,7 +535,7 @@ __os_static os_handle_state_t os_fish_irq_handle_default_fn(unsigned int rec)
         break;
     }
     if (combination_keys_index == 0 || 
-        jiffies.c - last_jiffies.c < 300) {
+        jiffies.c - last_jiffies.c < 100) {
         combination_keys[combination_keys_index++] = (unsigned char)rec;
         if (combination_keys_index == 3) {
             static unsigned char del_char = 127;
