@@ -32,6 +32,7 @@ struct os_fish_inp_nd {
 };
 // History command list
 static LIST_HEAD(__os_service_tin_list);
+static struct list_head* __os_service_tin_list_tail;
 static unsigned char __os_service_tin_list_len;
 
 // Every complete command(End with the 'CR (Carriage Return)' key) can be sent to this mq.
@@ -464,6 +465,7 @@ __os_static void __tin_list_add_tail(struct os_service_fish_input *inp)
     nd->data_pack = inp;
     list_add_tail(&__os_service_tin_list, &nd->list_nd);
     __os_service_tin_list_len++;
+    __os_service_tin_list_tail = __os_service_tin_list.prev;
 }
 
 __os_static void __tin_list_clear(void)
@@ -509,6 +511,55 @@ __os_static os_handle_state_t os_fish_irq_handle_default_fn(unsigned int rec)
     static unsigned char combination_keys_index;
     static struct jiffies_structure last_jiffies;
     
+    if (27 == rec) {
+        combination_keys_index = 0;
+        combination_keys[combination_keys_index++] = (unsigned char)rec;
+        last_jiffies = jiffies;
+        return OS_HANDLE_SUCCESS;
+    }
+    if (0 != combination_keys_index &&
+        jiffies.c - last_jiffies.c < 100) {
+        combination_keys[combination_keys_index++] = (unsigned char)rec;
+        if (combination_keys_index == 3) {
+            os_fish_clear_input_buffer(true);
+            if (combination_keys[0] == 27 && 
+                combination_keys[1] == 91) {
+                switch(combination_keys[2]) {
+                case 'A': // up
+                    if (__os_service_tin_list_tail != (&__os_service_tin_list)) {
+                        struct os_fish_inp_nd *tmp =
+                            os_list_entry(__os_service_tin_list_tail, struct os_fish_inp_nd, list_nd);
+                        memcpy(&input_buffer, tmp->data_pack, sizeof(struct os_service_fish_input));
+                        os_device_write(os_get_sys_uart_device_handle(), 0,
+                                (void *)input_buffer.data, input_buffer.size);
+                        __os_service_tin_list_tail = __os_service_tin_list_tail->prev;
+                    }
+                    break;
+                case 'B': // buttom
+                    if (__os_service_tin_list_tail->next != &__os_service_tin_list) {
+                        struct os_fish_inp_nd *tmp =
+                            os_list_entry(__os_service_tin_list_tail, struct os_fish_inp_nd, list_nd);
+                        memcpy(&input_buffer, tmp->data_pack, sizeof(struct os_service_fish_input));
+                        os_device_write(os_get_sys_uart_device_handle(), 0,
+                                (void *)input_buffer.data, input_buffer.size);
+                        __os_service_tin_list_tail = __os_service_tin_list_tail->next;
+                    }
+                    break;
+                case 'C': // left
+                    break;
+                case 'D': // right
+                    break;
+                default:
+                    break;
+                }
+            }
+            combination_keys_index = 0;
+            last_jiffies = jiffies;
+            return OS_HANDLE_SUCCESS;
+        }
+    } else {
+        combination_keys_index = 0;
+    }
 
     switch (rec) {
     case 13:  // CR (Carriage Return)
@@ -526,45 +577,14 @@ __os_static os_handle_state_t os_fish_irq_handle_default_fn(unsigned int rec)
         break;
     case 9:  // tab
         break;
-    case 27:
-        break;
     default:
         input_buffer.data[input_buffer.size] = rec;
         input_buffer.size++;
         os_device_write(os_get_sys_uart_device_handle(), 0, (void *)&rec, 2);
         break;
     }
-    if (combination_keys_index == 0 || 
-        jiffies.c - last_jiffies.c < 100) {
-        combination_keys[combination_keys_index++] = (unsigned char)rec;
-        if (combination_keys_index == 3) {
-            static unsigned char del_char = 127;
-            input_buffer.size -= 2;
-            os_device_write(os_get_sys_uart_device_handle(), 0, (void *)&del_char, 1);
-            os_device_write(os_get_sys_uart_device_handle(), 0, (void *)&del_char, 1);
-            if (combination_keys[0] == 27 && 
-                combination_keys[1] == 91) {
-                switch(combination_keys[2]) {
-                case 'A': // up
-                    break;
-                case 'B': // buttom
-                    break;
-                case 'C': // left
-                    break;
-                case 'D': // right
-                    break;
-                default:
-                    break;
-                }
-            }
-            combination_keys_index = 0;
 
-        }
-    } else {
-        combination_keys_index = 0;
-    }
     last_jiffies = jiffies;
-
     return OS_HANDLE_SUCCESS;
 }
 
@@ -682,12 +702,13 @@ void os_service_init(void)
 #endif
     os_mqueue_init(&__os_fish_inp_mq, 5, sizeof(struct os_service_fish_input));
     os_mqueue_init(&__os_fish_step_inp_mq, 5, sizeof(struct os_service_fish_input));
-    os_task_create(&_fish_tcb, (void *)fish_task_stack,
-                   FISH_TASK_STACK_SIZE, FISH_TASK_PRIO,
-                   __kthread_terminal, NULL, "KERNEL FISH TASK");
     fish_irq_handle_vector[OS_FISH_IRQ_HANDLE_NONE] = NULL;
     fish_irq_handle_vector[OS_FISH_IRQ_HANDLE_DEFAULT] = os_fish_irq_handle_default_fn;
     fish_irq_handle_vector[OS_FISH_IRQ_HANDLE_STEP] = os_fish_irq_handle_step_fn;
     os_fish_change_irq_handle(OS_FISH_IRQ_HANDLE_DEFAULT);
+    __os_service_tin_list_tail = __os_service_tin_list.prev;
+    os_task_create(&_fish_tcb, (void *)fish_task_stack,
+                   FISH_TASK_STACK_SIZE, FISH_TASK_PRIO,
+                   __kthread_terminal, NULL, "KERNEL FISH TASK");
 #endif
 }
