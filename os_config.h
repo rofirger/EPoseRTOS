@@ -14,7 +14,7 @@
 // 开启FPU
 #define CONFIG_ARCH_FPU
 // 提供给RTOS的滴答时钟频率
-#define CONFIG_SYSTICK_CLOCK_FREQUENCY (144000000UL)
+#define CONFIG_SYSTICK_CLOCK_FREQUENCY ()
 // 开启终端
 #define CONFIG_FISH
 // 开启命令描述
@@ -24,7 +24,7 @@
 // 开启调试
 #define CONFIG_OS_DEBUG
 // 堆大小
-#define CONFIG_HEAP_SIZE (51200)
+#define CONFIG_HEAP_SIZE ()
 
 #ifdef CONFIG_FISH
 // 内核终端线程的优先级
