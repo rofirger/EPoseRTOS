@@ -8,14 +8,14 @@
  * @note:
  ***********************/
 
-#include "os_port_c.h"
+#include "../os_port_c.h"
 #include "hpm_common.h"
 #include "hpm_soc.h"
 #include "hpm_interrupt.h"
 #include "hpm_mchtmr_drv.h"
-#include "../../os_sys.h"
-#include "../../os_core.h"
-#include "../../os_config.h"
+#include "../../../os_sys.h"
+#include "../../../os_core.h"
+#include "../../../os_config.h"
 
 extern struct task_control_block *os_task_current;
 extern struct task_control_block *os_task_ready;
@@ -91,6 +91,17 @@ struct os_hw_stack_frame {
 #endif
 };
 
+/**
+ * Initialize the process stack for a task.
+ *
+ * @param[in] _fn_entry         The entry function address for the task.
+ * @param[in] _arg              The argument for the entry function.
+ * @param[in] _exit             The exit function address for the task.
+ * @param[in/out] _stack_addr   The address of the stack memory.
+ * @param[int] _stack_size      The size of the stack memory.
+ *
+ * @return A pointer to the initialized process stack.
+ */
 unsigned int *os_process_stack_init(void *_fn_entry,
                                     void *_arg,
                                     void *_exit,

@@ -59,7 +59,7 @@ void os_printk(const char *fmt, ...);
 #define OS_ASSERT(expr)                                                                      \
     if (!(expr))                                                                             \
         do {                                                                                 \
-            os_printk("Assertion failed:%s, file %s, line %d\n", #expr, __FILE__, __LINE__); \
+            os_printk("Assertion failed:%s, file %s, line %d\r\n", #expr, __FILE__, __LINE__); \
             while(1);                                                                        \
     } while (0)
 #else

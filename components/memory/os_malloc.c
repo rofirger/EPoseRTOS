@@ -17,12 +17,10 @@
 #include "../../os_list.h"
 #include "../../os_service.h"
 #include "os_malloc.h"
-#include "stdlib.h"
 
 #define HEAP_MEM_MAGIC (0x6870) // magic number
-#define RTOS_HEAP_SIZE (5120)
 
-LIST_HEAD(heap_list_head);
+static LIST_HEAD(heap_list_head);
 
 struct heap_structure {
     void *heap_head;
@@ -37,15 +35,28 @@ struct small_memory_header {
     unsigned int _size; // bytes
     struct list_head _nd;
 };
-unsigned char tmp_mem[RTOS_HEAP_SIZE];
+
+/**
+ * Called by os_board_init(), the size of heap must be CONFIG_HEAP_SIZE
+ *
+ * @param[in/out] ptr      The head of the heap.
+ *
+ * @return        void
+ */
+void os_set_sys_heap_head(void* ptr)
+{
+    heap.heap_head = ptr;
+    heap.heap_size = CONFIG_HEAP_SIZE;
+}
+
+/**
+ * Initialize the memory manage subsystem.
+ *
+ * In EPoseRTOS, it is called in os_sys_init() function
+ */
 void os_memory_init(void)
 {
-    //    heap.heap_head = RTOS_HEAP_BEGIN;
-    //    heap.heap_size = (unsigned int)((unsigned char*)RTOS_HEAP_END) - (unsigned int)((unsigned char*)RTOS_HEAP_BEGIN);
-    // heap.heap_head = malloc(RTOS_HEAP_SIZE);
-    heap.heap_head = tmp_mem;
     OS_ASSERT(heap.heap_head != NULL);
-    heap.heap_size = RTOS_HEAP_SIZE;
     struct small_memory_header *_m = (struct small_memory_header *)heap.heap_head;
     _m->_magic = HEAP_MEM_MAGIC;
     _m->_size = heap.heap_size;
@@ -53,6 +64,14 @@ void os_memory_init(void)
     list_add_tail(&heap_list_head, &(_m->_nd));
 }
 
+/**
+ * Allocate memory from the list_head(mounted with an unallocated memory).
+ *
+ * @param[in/out] _heap_list_head The head of the heap list.
+ * @param[in]     _size(byte)     The size of the memory block to be allocated.
+ *
+ * @return                A pointer to the allocated memory block.
+ */
 __os_static void *__os_malloc_base(struct list_head *_heap_list_head,
                                    unsigned int _size)
 {
@@ -91,15 +110,26 @@ __os_static void *__os_malloc_base(struct list_head *_heap_list_head,
     return NULL;
 }
 
-/* _size : bytes */
-__os_inline void *os_malloc(unsigned int _size)
+/**
+ * Allocate memory from the kernel heap. **Non-thread-safe**
+ *
+ * @param[in] _size The size of the memory block to be allocated.
+ *
+ * @return A pointer to the allocated memory block.
+ */
+void *os_malloc(unsigned int _size)
 {
     return __os_malloc_base(&heap_list_head, _size);
 }
 
-/*
- * @note: _m_head 4 0.
- * */
+/**
+ * Construct kernel-recognizable memory data structure from user-provided memory.
+ *
+ * @param _m_head[in/out] The starting address of the user-provided memory block.
+ * @param _size[in]       The size of the memory block to be constructed.
+ *
+ * @return An OS_MALLOC_HANDLE representing the user-provided memory block.
+ */
 OS_MALLOC_HANDLE os_malloc_keep(void *_m_head, unsigned int _size)
 {
     if (_m_head == NULL ||
@@ -122,6 +152,14 @@ OS_MALLOC_HANDLE os_malloc_keep(void *_m_head, unsigned int _size)
     return (OS_MALLOC_HANDLE)keep_head;
 }
 
+/**
+ * Allocate memory based on the OS_MALLOC_HANDLE. **Non-thread-safe**
+ *
+ * @param[in] _handle The return value of os_malloc_keep(...).
+ * @param[in] _size   The size of the memory block to be allocated.
+ *
+ * @return A pointer to the allocated memory block.
+ */
 void *os_malloc_usr(OS_MALLOC_HANDLE _handle, unsigned int _size)
 {
     if (_handle == 0)
@@ -145,7 +183,7 @@ __os_static void __os_free_base(struct list_head *_heap_list_head,
 
     struct small_memory_header *smh_this = NULL;
     struct small_memory_header *smh_next = NULL;
-    //
+    
     while (_tmp_nd->prev != _heap_list_head) {
         smh_this = os_list_entry(_tmp_nd, struct small_memory_header, _nd);
         smh_next = os_list_entry(_tmp_nd->prev, struct small_memory_header, _nd);
@@ -158,7 +196,7 @@ __os_static void __os_free_base(struct list_head *_heap_list_head,
         }
         _tmp_nd = _assist_nd;
     }
-    //
+    
     while (_tmp_nd->next != _heap_list_head) {
         smh_this = os_list_entry(_tmp_nd, struct small_memory_header, _nd);
         smh_next = os_list_entry(_tmp_nd->next, struct small_memory_header, _nd);
@@ -173,11 +211,22 @@ __os_static void __os_free_base(struct list_head *_heap_list_head,
     }
 }
 
+/**
+ * Free memory [MUST BE] allocated by os_malloc. **Non-thread-safe**
+ *
+ * @param[in/out] _ptr A pointer to the memory block to be freed.
+ */
 void os_free(void *_ptr)
 {
     __os_free_base(&heap_list_head, _ptr);
 }
 
+/**
+ * Free memory [MUST BE] allocated by os_malloc_usr. **Non-thread-safe**
+ *
+ * @param[in] _handle The return value of os_malloc_keep(...).
+ * @param[in/out] _ptr A pointer to the memory block to be freed.
+ */
 void os_free_usr(OS_MALLOC_HANDLE _handle, void *_ptr)
 {
     __os_free_base((struct list_head *)_handle, _ptr);
@@ -196,7 +245,7 @@ OS_CMD_PROCESS_FN(memory_used)
             _used_m += smh_this->_size;
     }
     OS_EXIT_CRITICAL;
-    unsigned int _mleft = RTOS_HEAP_SIZE - _used_m;
+    unsigned int _mleft = CONFIG_HEAP_SIZE - _used_m;
     os_printk(":heap used->%d\r\n", _used_m);
     os_printk(":heap left->%d\r\n", _mleft);
     return _mleft;

@@ -53,7 +53,7 @@ __os_static void __os_welcome_kprint(void)
 /* 实时系统初始化 */
 void os_sys_init(void)
 {
-    // board init
+    // board init. Must be initialized first!!!
     os_board_init();
     // print kernel info
     __os_welcome_kprint();
