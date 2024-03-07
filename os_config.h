@@ -13,7 +13,7 @@
 
 // 开启FPU
 #define CONFIG_ARCH_FPU
-// 提供给RTOS的滴答时钟频率
+// 提供给RTOS的滴答时钟频率, 24MHz
 #define CONFIG_SYSTICK_CLOCK_FREQUENCY (24000000UL)
 // 开启终端
 #define CONFIG_FISH
