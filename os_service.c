@@ -354,12 +354,16 @@ __os_inline void os_printk_flush()
 
 void os_fish_clear_input_buffer(bool is_clear_screen)
 {
+    if (input_buffer.size == 0)
+        return;
     static unsigned char del_char = 127;
     static struct os_device *handle;
     handle = os_get_sys_uart_device_handle();
-    if (is_clear_screen)
-        while(input_buffer.size-- != 0)
+    if (is_clear_screen) {
+        while(--input_buffer.size > 0)
             os_device_write(handle, 0, (void *)&del_char, 1);
+        os_device_write(handle, 0, (void *)&del_char, 1);
+    }
     else
       input_buffer.size = 0;
 }
@@ -536,9 +540,9 @@ __os_static os_handle_state_t os_fish_irq_handle_default_fn(unsigned int rec)
                     }
                     break;
                 case 'B': // buttom
-                    if (__os_service_tin_list_tail->next != &__os_service_tin_list) {
+                    if (__os_service_tin_list_tail->next != (&__os_service_tin_list)) {
                         struct os_fish_inp_nd *tmp =
-                            os_list_entry(__os_service_tin_list_tail, struct os_fish_inp_nd, list_nd);
+                            os_list_entry(__os_service_tin_list_tail->next, struct os_fish_inp_nd, list_nd);
                         memcpy(&input_buffer, tmp->data_pack, sizeof(struct os_service_fish_input));
                         os_device_write(os_get_sys_uart_device_handle(), 0,
                                 (void *)input_buffer.data, input_buffer.size);
@@ -554,9 +558,9 @@ __os_static os_handle_state_t os_fish_irq_handle_default_fn(unsigned int rec)
                 }
             }
             combination_keys_index = 0;
-            last_jiffies = jiffies;
-            return OS_HANDLE_SUCCESS;
         }
+        last_jiffies = jiffies;
+        return OS_HANDLE_SUCCESS;
     } else {
         combination_keys_index = 0;
     }
