@@ -10,6 +10,7 @@
 typedef unsigned int OS_MALLOC_HANDLE;
 void os_memory_init(void);
 void* os_malloc(unsigned int _size);
+void *os_calloc(unsigned int _nmemb, unsigned int _size);
 void os_free(void* _ptr);
 
 OS_MALLOC_HANDLE os_malloc_keep(void* _m_head, unsigned int _size);

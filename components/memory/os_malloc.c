@@ -122,6 +122,14 @@ void *os_malloc(unsigned int _size)
     return __os_malloc_base(&heap_list_head, _size);
 }
 
+void *os_calloc(unsigned int _nmemb, unsigned int _size)
+{
+    unsigned int _s = _size * _nmemb;
+    void *_mem = __os_malloc_base(&heap_list_head, _s);
+    memset(_mem, 0, _s);
+    return _mem;
+}
+
 /**
  * Construct kernel-recognizable memory data structure from user-provided memory.
  *
