@@ -16,6 +16,7 @@
 #include "../../os_def.h"
 #include "../../os_list.h"
 #include "../../os_service.h"
+#include "../lib/os_string.h"
 #include "os_malloc.h"
 
 #define HEAP_MEM_MAGIC (0x6870) // magic number
@@ -126,7 +127,7 @@ void *os_calloc(unsigned int _nmemb, unsigned int _size)
 {
     unsigned int _s = _size * _nmemb;
     void *_mem = __os_malloc_base(&heap_list_head, _s);
-    memset(_mem, 0, _s);
+    os_memset(_mem, 0, _s);
     return _mem;
 }
 
