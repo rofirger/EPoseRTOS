@@ -56,6 +56,7 @@ struct jiffies_structure {
     uint32_t bc;
 };
 
+struct jiffies_structure os_get_timestamp(void);
 void os_soft_timer_set_systick_times(const uint32_t new_st);
 void os_soft_timer_systick_handle(void);
 void os_soft_timer_init(void);

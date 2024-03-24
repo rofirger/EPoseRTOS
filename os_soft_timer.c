@@ -28,6 +28,11 @@ inline void os_soft_timer_set_systick_times(const uint32_t new_st)
     jiffies.c = new_st;
 }
 
+struct jiffies_structure os_get_timestamp(void)
+{
+    return jiffies;
+}
+
 void os_soft_timer_init(void)
 {
     _irq_times_s = jiffies.c;
