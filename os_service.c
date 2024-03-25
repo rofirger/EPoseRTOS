@@ -508,7 +508,7 @@ static void __kthread_terminal(void *_arg)
     }
 }
 
-os_private os_handle_state_t os_fish_irq_handle_default_fn(unsigned int rec)
+os_private os_handle_state_t __os_fish_irq_handle_default_fn(unsigned int rec)
 {
     
     static unsigned char combination_keys[5];
@@ -604,7 +604,7 @@ os_handle_state_t os_fish_irq_handle_callback(unsigned int rec)
 #endif
 }
 
-os_private os_handle_state_t os_fish_irq_handle_step_fn(unsigned int rec)
+os_private os_handle_state_t __os_fish_irq_handle_step_fn(unsigned int rec)
 {
     unsigned char get_rec = (unsigned char)rec;
     os_mqueue_send(os_get_fish_step_input_mq(), (void *)&get_rec,
@@ -707,8 +707,8 @@ void os_service_init(void)
     os_mqueue_init(&__os_fish_inp_mq, 5, sizeof(struct os_service_fish_input));
     os_mqueue_init(&__os_fish_step_inp_mq, 5, sizeof(struct os_service_fish_input));
     fish_irq_handle_vector[OS_FISH_IRQ_HANDLE_NONE] = NULL;
-    fish_irq_handle_vector[OS_FISH_IRQ_HANDLE_DEFAULT] = os_fish_irq_handle_default_fn;
-    fish_irq_handle_vector[OS_FISH_IRQ_HANDLE_STEP] = os_fish_irq_handle_step_fn;
+    fish_irq_handle_vector[OS_FISH_IRQ_HANDLE_DEFAULT] = __os_fish_irq_handle_default_fn;
+    fish_irq_handle_vector[OS_FISH_IRQ_HANDLE_STEP] = __os_fish_irq_handle_step_fn;
     os_fish_change_irq_handle(OS_FISH_IRQ_HANDLE_DEFAULT);
     __os_service_tin_list_tail = __os_service_tin_list.prev;
     os_task_create(&_fish_tcb, (void *)fish_task_stack,

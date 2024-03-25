@@ -89,7 +89,7 @@ os_handle_state_t os_add_tick_task(struct task_control_block *_task_tcb, unsigne
 //	}
 // }
 
-os_private void tick_tcb_time_out_cb(struct task_control_block *task)
+os_private void __tick_tcb_time_out_cb(struct task_control_block *task)
 {
     // task 目前处于 time out 状态
     task->_task_block_state = OS_TASK_BLOCK_TIMEOUT;
@@ -97,7 +97,7 @@ os_private void tick_tcb_time_out_cb(struct task_control_block *task)
     os_rq_add_task(task);
 }
 
-os_private void os_tick_del_all_task(struct os_tick *ptr_tick, void (*callback)(struct task_control_block *task))
+os_private void __os_tick_del_all_task(struct os_tick *ptr_tick, void (*callback)(struct task_control_block *task))
 {
     struct list_head *_current_node = NULL;
     struct list_head *_next_node = NULL;
@@ -142,7 +142,7 @@ void os_task_tick_poll(void)
             break;
 
         // 从 _os_tick_list_head 队列中移除
-        os_tick_del_all_task(_current_tick_node, tick_tcb_time_out_cb);
+        __os_tick_del_all_task(_current_tick_node, __tick_tcb_time_out_cb);
     }
     // os_sys_exit_irq();
     OS_EXIT_CRITICAL
