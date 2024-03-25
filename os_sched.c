@@ -48,7 +48,7 @@ const unsigned char _lowest_bitmap[] =
         4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0};
 
 /* 向bitmap中登记优先级 */
-__os_inline void __insert_task_priority(unsigned char _priority)
+inline void __insert_task_priority(unsigned char _priority)
 {
     unsigned char _group_bit_index = _priority >> 3;
     os_ready_table[_group_bit_index] |= (1L << (_priority & 0x07));
@@ -56,7 +56,7 @@ __os_inline void __insert_task_priority(unsigned char _priority)
 }
 
 /* 从bitmap中注销优先级 */
-__os_inline void __del_task_priority(unsigned char _priority)
+inline void __del_task_priority(unsigned char _priority)
 {
     unsigned char _group_bit_index = _priority >> 3;
     os_ready_table[_group_bit_index] &= (~(1L << (_priority & 0x07)));
@@ -64,7 +64,7 @@ __os_inline void __del_task_priority(unsigned char _priority)
         os_ready_priority_group &= (~(1L << _group_bit_index));
 }
 
-__os_static unsigned int __ffb(unsigned int _word)
+os_private unsigned int __ffb(unsigned int _word)
 {
     if (0 == _word)
         return 0;
@@ -78,19 +78,19 @@ __os_static unsigned int __ffb(unsigned int _word)
 }
 
 /* 从bitmap中获取最高优先级(数值越小，优先级越高) */
-__os_inline unsigned char __get_highest_ready_priority(void)
+inline unsigned char __get_highest_ready_priority(void)
 {
     unsigned char _tmp_num;
     _tmp_num = __ffb(os_ready_priority_group);
     return ((_tmp_num << 3L) + __ffb(os_ready_table[_tmp_num]));
 }
 
-__os_inline void update_ready_queue_priority(void)
+inline void update_ready_queue_priority(void)
 {
     _os_rq._highest_priority = __get_highest_ready_priority();
 }
 
-__os_static void __os_rq_add_task_head(struct task_control_block *_task)
+os_private void __os_rq_add_task_head(struct task_control_block *_task)
 {
     unsigned char _task_prio = _task->_task_priority;
     if (list_empty(&_os_rq._queue[_task_prio])) {
@@ -101,7 +101,7 @@ __os_static void __os_rq_add_task_head(struct task_control_block *_task)
     list_add(&_os_rq._queue[_task_prio], &_task->_slot_nd);
 }
 
-__os_static void __os_rq_add_task_tail(struct task_control_block *_task)
+os_private void __os_rq_add_task_tail(struct task_control_block *_task)
 {
     unsigned char _task_prio = _task->_task_priority;
     if (list_empty(&_os_rq._queue[_task_prio])) {
@@ -128,7 +128,7 @@ void os_rq_add_task(struct task_control_block *_task)
     os_task_state_set_ready(_task);
 }
 
-__os_inline __os_static void __os_sched_timeslice_task_rq_del(struct task_control_block *_task)
+inline os_private void __os_sched_timeslice_task_rq_del(struct task_control_block *_task)
 {
     /* 当任务被从就绪队列移除时，需要更新时间片指针信息 */
     if (_task->_task_priority == _os_sched_timeslice_pos._last_priority &&
@@ -192,7 +192,7 @@ void os_ready_queue_init(void)
 }
 
 /* 是否处在调度锁 */
-__os_inline bool os_sched_is_lock(void)
+inline bool os_sched_is_lock(void)
 {
     return (_os_sched_lock_nesting > 0);
 }
@@ -228,7 +228,7 @@ os_handle_state_t os_sched_unlock(void)
 }
 
 /* 时间片初始化 */
-__os_inline void os_sched_timeslice_init(void)
+inline void os_sched_timeslice_init(void)
 {
     _os_sched_timeslice_pos._last_priority = OS_TASK_MAX_PRIORITY + 1;
     for (unsigned int _i = 0; _i < OS_READY_LIST_SIZE; ++_i)
@@ -236,19 +236,19 @@ __os_inline void os_sched_timeslice_init(void)
 }
 
 /* 修改对应优先级的时间片 */
-__os_inline void os_sched_timeslice_set(unsigned int _prio, unsigned int _new_timeslice)
+inline void os_sched_timeslice_set(unsigned int _prio, unsigned int _new_timeslice)
 {
     _sched_prio_timeslice[_prio] = _new_timeslice;
 }
 
 /* 获取对应优先级的时间片 */
-__os_inline unsigned int os_sched_timeslice_get(unsigned int _prio)
+inline unsigned int os_sched_timeslice_get(unsigned int _prio)
 {
     return _sched_prio_timeslice[_prio];
 }
 
 /* 任务时间片重新加载 */
-__os_inline void os_sched_timeslice_reload(struct task_control_block *_task_tcb)
+inline void os_sched_timeslice_reload(struct task_control_block *_task_tcb)
 {
     _task_tcb->_task_timeslice = os_sched_timeslice_get(_task_tcb->_task_priority);
 }
@@ -268,14 +268,14 @@ void os_sched_timeslice_poll(void)
 
 static unsigned int __status_os_diable_sched;
 /* 禁止任务调度 */
-__os_inline void os_diable_sched(void)
+inline void os_diable_sched(void)
 {
     // os_sys_enter_irq();
     __status_os_diable_sched = os_port_enter_critical();
 }
 
 /* 开启任务调度 */
-__os_inline void os_enable_sched(void)
+inline void os_enable_sched(void)
 {
     // os_sys_exit_irq();
     os_port_exit_critical(__status_os_diable_sched);

@@ -24,56 +24,56 @@ unsigned int os_cpu_running_flag = 0;
 /***********************************************************************************/
 /***********************************************************************************/
 /*********************** new ***********************/
-__os_inline bool os_task_state_is_new(struct task_control_block *_task_tcb)
+inline bool os_task_state_is_new(struct task_control_block *_task_tcb)
 {
     return (_task_tcb->_task_state == OS_TASK_NEW);
 }
 
-__os_inline void os_task_state_set_new(struct task_control_block *_task_tcb)
+inline void os_task_state_set_new(struct task_control_block *_task_tcb)
 {
     _task_tcb->_task_state = OS_TASK_NEW;
 }
 
 /*********************** ready ***********************/
-__os_inline bool os_task_state_is_ready(struct task_control_block *_task_tcb)
+inline bool os_task_state_is_ready(struct task_control_block *_task_tcb)
 {
     return (_task_tcb->_task_state == OS_TASK_READY);
 }
 
-__os_inline void os_task_state_set_ready(struct task_control_block *_task_tcb)
+inline void os_task_state_set_ready(struct task_control_block *_task_tcb)
 {
     _task_tcb->_task_state = OS_TASK_READY;
 }
 
 /*********************** running ***********************/
-__os_inline bool os_task_state_is_running(struct task_control_block *_task_tcb)
+inline bool os_task_state_is_running(struct task_control_block *_task_tcb)
 {
     return (_task_tcb->_task_state == OS_TASK_RUNNING);
 }
 
-__os_inline void os_task_state_set_running(struct task_control_block *_task_tcb)
+inline void os_task_state_set_running(struct task_control_block *_task_tcb)
 {
     _task_tcb->_task_state = OS_TASK_RUNNING;
 }
 
 /*********************** stopped ***********************/
-__os_inline bool os_task_state_is_stopped(struct task_control_block *_task_tcb)
+inline bool os_task_state_is_stopped(struct task_control_block *_task_tcb)
 {
     return (_task_tcb->_task_state == OS_TASK_TERMINATED);
 }
 
-__os_inline void os_task_state_set_stopped(struct task_control_block *_task_tcb)
+inline void os_task_state_set_stopped(struct task_control_block *_task_tcb)
 {
     _task_tcb->_task_state = OS_TASK_TERMINATED;
 }
 
 /*********************** block ***********************/
-__os_inline bool os_task_state_is_blocking(struct task_control_block *_task_tcb)
+inline bool os_task_state_is_blocking(struct task_control_block *_task_tcb)
 {
     return (_task_tcb->_task_state == OS_TASK_BLOCKING);
 }
 
-__os_inline void os_task_state_set_blocking(struct task_control_block *_task_tcb)
+inline void os_task_state_set_blocking(struct task_control_block *_task_tcb)
 {
     _task_tcb->_task_state = OS_TASK_BLOCKING;
 }
@@ -92,7 +92,7 @@ inline void os_cpu_set_running(void)
 }
 
 /* 线程退出 */
-__os_static void __os_task_exit_handle(void)
+os_private void __os_task_exit_handle(void)
 {
     OS_ENTER_CRITICAL
 
@@ -177,7 +177,7 @@ const char _os_block_state_str[3][8] = {
     "TIMEOUT",
 };
 
-__os_static OS_CMD_PROCESS_FN(ps_fn)
+os_private OS_CMD_PROCESS_FN(ps_fn)
 {
     unsigned int i;
     struct task_control_block *task;

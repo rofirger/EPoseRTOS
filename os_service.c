@@ -345,7 +345,7 @@ void os_printk(const char *fmt, ...)
 #endif
 }
 
-__os_inline void os_printk_flush()
+inline void os_printk_flush()
 {
     sys_uart_write_flush();
 }
@@ -368,7 +368,7 @@ void os_fish_clear_input_buffer(bool is_clear_screen)
       input_buffer.size = 0;
 }
 
-__os_static cmd_call_ptr __os_get_cmd_call(char *cmd, unsigned int size)
+os_private cmd_call_ptr __os_get_cmd_call(char *cmd, unsigned int size)
 {
     struct os_fish_cmd_structure *cmd_structure;
     cmd_call_ptr cmd_call = NULL;
@@ -388,7 +388,7 @@ __os_static cmd_call_ptr __os_get_cmd_call(char *cmd, unsigned int size)
     return cmd_call;
 }
 
-__os_static unsigned int __os_split_cmd(char *cmd,
+os_private unsigned int __os_split_cmd(char *cmd,
                                         unsigned int size,
                                         char *argv[OS_SERVICE_FISH_ARG_MAX])
 {
@@ -449,7 +449,7 @@ os_handle_state_t os_exec_cmd(char *cmd, unsigned int size, int *cmd_ret_val)
     return OS_HANDLE_SUCCESS;
 }
 
-__os_static void __tin_list_add_tail(struct os_service_fish_input *inp)
+os_private void __tin_list_add_tail(struct os_service_fish_input *inp)
 {
     // Buffer full
     if (__os_service_tin_list_len >= OS_SERVICE_FISH_MSG_LIST_CAP) {
@@ -472,7 +472,7 @@ __os_static void __tin_list_add_tail(struct os_service_fish_input *inp)
     __os_service_tin_list_tail = __os_service_tin_list.prev;
 }
 
-__os_static void __tin_list_clear(void)
+os_private void __tin_list_clear(void)
 {
     struct list_head *current_pos = NULL;
     struct list_head *next_pos = NULL;
@@ -508,7 +508,7 @@ static void __kthread_terminal(void *_arg)
     }
 }
 
-__os_static os_handle_state_t os_fish_irq_handle_default_fn(unsigned int rec)
+os_private os_handle_state_t os_fish_irq_handle_default_fn(unsigned int rec)
 {
     
     static unsigned char combination_keys[5];
@@ -604,7 +604,7 @@ os_handle_state_t os_fish_irq_handle_callback(unsigned int rec)
 #endif
 }
 
-__os_static os_handle_state_t os_fish_irq_handle_step_fn(unsigned int rec)
+os_private os_handle_state_t os_fish_irq_handle_step_fn(unsigned int rec)
 {
     unsigned char get_rec = (unsigned char)rec;
     os_mqueue_send(os_get_fish_step_input_mq(), (void *)&get_rec,
@@ -624,7 +624,7 @@ bool os_fish_change_irq_handle(enum os_fish_irq_handle new_handle)
     return false;
 }
 
-__os_inline enum os_fish_irq_handle os_fish_get_now_irq_handle(void)
+inline enum os_fish_irq_handle os_fish_get_now_irq_handle(void)
 {
 #ifdef CONFIG_FISH
     return fish_irq_handle_vec_index;
@@ -633,24 +633,24 @@ __os_inline enum os_fish_irq_handle os_fish_get_now_irq_handle(void)
 #endif
 }
 
-__os_static OS_CMD_PROCESS_FN(hello_world)
+os_private OS_CMD_PROCESS_FN(hello_world)
 {
     os_printk("Hello world!\r\n");
     return 0;
 }
 
-__os_static OS_CMD_PROCESS_FN(read_cmd_cap)
+os_private OS_CMD_PROCESS_FN(read_cmd_cap)
 {
     return __os_service_tin_list_len;
 }
 
-__os_static OS_CMD_PROCESS_FN(clear_cmd_history)
+os_private OS_CMD_PROCESS_FN(clear_cmd_history)
 {
     __tin_list_clear();
     return __os_service_tin_list_len;
 }
 
-__os_static OS_CMD_PROCESS_FN(list_cmd)
+os_private OS_CMD_PROCESS_FN(list_cmd)
 {
     struct os_fish_cmd_structure *cmd_structure;
     const char *str;
@@ -676,7 +676,7 @@ OS_CMD_EXPORT(clearcmd, clear_cmd_history, "Clear the buffer for the commands th
 OS_CMD_EXPORT(help, list_cmd, "Help?");
 #endif
 
-__os_inline struct os_mqueue *os_get_fish_input_mq(void)
+inline struct os_mqueue *os_get_fish_input_mq(void)
 {
 #ifdef CONFIG_FISH
     return &__os_fish_inp_mq;
@@ -685,7 +685,7 @@ __os_inline struct os_mqueue *os_get_fish_input_mq(void)
 #endif
 }
 
-__os_inline struct os_mqueue *os_get_fish_step_input_mq(void)
+inline struct os_mqueue *os_get_fish_step_input_mq(void)
 {
 #ifdef CONFIG_FISH
     return &__os_fish_step_inp_mq;

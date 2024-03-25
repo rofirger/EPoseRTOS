@@ -74,7 +74,7 @@ os_handle_state_t os_device_register(struct os_device *dev,
     return OS_HANDLE_SUCCESS;
 }
 
-__os_inline bool os_device_is_register(struct os_device *dev)
+inline bool os_device_is_register(struct os_device *dev)
 {
     return ((dev->_flag & OS_DEVICE_REGISTER) != 0);
 }

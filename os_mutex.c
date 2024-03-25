@@ -23,7 +23,7 @@
 /*
  *@func: 将锁的拥有者(任务)的优先级提高，防止出现优先级反转
  */
-__os_static __os_inline void __mutex_owner_prio_up(struct os_mutex *_mutex, unsigned int _prio)
+os_private inline void __mutex_owner_prio_up(struct os_mutex *_mutex, unsigned int _prio)
 {
     _mutex->_mutex_owner->_task_priority = _prio;
 }
@@ -31,7 +31,7 @@ __os_static __os_inline void __mutex_owner_prio_up(struct os_mutex *_mutex, unsi
 /*
  *@func: 更改锁的拥有者(任务)
  */
-__os_static void __mutex_owner_change(struct os_mutex *_mutex, struct task_control_block *_task_tcb)
+os_private void __mutex_owner_change(struct os_mutex *_mutex, struct task_control_block *_task_tcb)
 {
     // 恢复原来锁拥有者的优先级
     _mutex->_mutex_owner->_task_priority = _mutex->_owner_prio;
@@ -44,7 +44,7 @@ __os_static void __mutex_owner_change(struct os_mutex *_mutex, struct task_contr
 /*
  *@func: 检测锁是否存在拥有者(任务)
  */
-__os_inline bool os_mutex_is_owned(struct os_mutex *_mutex)
+inline bool os_mutex_is_owned(struct os_mutex *_mutex)
 {
     return (NULL != _mutex->_mutex_owner);
 }
@@ -52,7 +52,7 @@ __os_inline bool os_mutex_is_owned(struct os_mutex *_mutex)
 /*
  *@func: 检测锁的拥有者是否是当前任务
  */
-__os_inline bool os_mutex_is_self(struct os_mutex *_mutex)
+inline bool os_mutex_is_self(struct os_mutex *_mutex)
 {
     return (_mutex->_mutex_owner == os_get_current_task_tcb());
 }
@@ -60,7 +60,7 @@ __os_inline bool os_mutex_is_self(struct os_mutex *_mutex)
 /*
  *@func: 检测锁是否允许递归
  */
-__os_inline bool os_mutex_is_recursive(struct os_mutex *_mutex)
+inline bool os_mutex_is_recursive(struct os_mutex *_mutex)
 {
     return (_mutex->_mutex_type == OS_MUTEX_RECURSIVE);
 }
@@ -68,7 +68,7 @@ __os_inline bool os_mutex_is_recursive(struct os_mutex *_mutex)
 /*
  *@func: 释放锁拥有者
  */
-__os_static __os_inline void __os_mutex_owner_release(struct os_mutex *_mutex)
+os_private inline void __os_mutex_owner_release(struct os_mutex *_mutex)
 {
     // 恢复原来锁拥有者的优先级
     _mutex->_mutex_owner->_task_priority = _mutex->_owner_prio;
@@ -79,7 +79,7 @@ __os_static __os_inline void __os_mutex_owner_release(struct os_mutex *_mutex)
 /*
  *@func: 锁链表是否存在任务
  */
-__os_inline bool os_mutex_block_is_empty(struct os_mutex *_mutex)
+inline bool os_mutex_block_is_empty(struct os_mutex *_mutex)
 {
     return (list_empty(&_mutex->_block_obj._list));
 }
@@ -171,7 +171,7 @@ os_handle_state_t os_mutex_lock(struct os_mutex *_mutex, unsigned int time_out)
         return OS_HANDLE_FAIL;
 }
 
-__os_static __os_inline void __os_mutex_wakeup_task_cb(struct task_control_block *tcb)
+os_private inline void __os_mutex_wakeup_task_cb(struct task_control_block *tcb)
 {
     // 将该任务从挂载的tick上摘掉
     list_del_init(&(tcb->_bt_nd));

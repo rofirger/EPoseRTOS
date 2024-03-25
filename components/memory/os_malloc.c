@@ -73,7 +73,7 @@ void os_memory_init(void)
  *
  * @return                A pointer to the allocated memory block.
  */
-__os_static void *__os_malloc_base(struct list_head *_heap_list_head,
+os_private void *__os_malloc_base(struct list_head *_heap_list_head,
                                    unsigned int _size)
 {
     // size4
@@ -177,7 +177,7 @@ void *os_malloc_usr(OS_MALLOC_HANDLE _handle, unsigned int _size)
     return __os_malloc_base((struct list_head *)_handle, _size);
 }
 
-__os_static void __os_free_base(struct list_head *_heap_list_head,
+os_private void __os_free_base(struct list_head *_heap_list_head,
                                 void *_ptr)
 {
     if (_ptr == NULL)

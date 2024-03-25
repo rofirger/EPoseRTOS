@@ -16,7 +16,7 @@
 #include "os_tick.h"
 
 /* 将链节挂载到阻塞对象 */
-__os_static void __os_block_list_add(struct os_block_object *_block_obj, struct task_control_block *_task_tcb)
+os_private void __os_block_list_add(struct os_block_object *_block_obj, struct task_control_block *_task_tcb)
 {
     struct list_head *_block_node = &_block_obj->_list;
     struct list_head *_current_node = NULL;
@@ -33,7 +33,7 @@ __os_static void __os_block_list_add(struct os_block_object *_block_obj, struct 
 }
 
 /* 将链节挂载到tick阻塞对象 */
-__os_static void __os_tick_block_list_add(struct os_block_object *_block_obj, struct task_control_block *_task_tcb)
+os_private void __os_tick_block_list_add(struct os_block_object *_block_obj, struct task_control_block *_task_tcb)
 {
     struct list_head *_block_node = &_block_obj->_list;
     struct list_head *_current_node = NULL;
@@ -50,13 +50,13 @@ __os_static void __os_tick_block_list_add(struct os_block_object *_block_obj, st
 }
 
 /* 将线程tcb从阻塞类对象链表中移除 */
-__os_static void __os_block_list_del(struct task_control_block *_task_tcb)
+os_private void __os_block_list_del(struct task_control_block *_task_tcb)
 {
     list_del_init(&_task_tcb->_slot_nd);
 }
 
 /* 检测线程tcb是否已被挂载在某一个阻塞类对象中 */
-__os_inline bool os_task_is_block(struct task_control_block *_task_tcb)
+inline bool os_task_is_block(struct task_control_block *_task_tcb)
 {
     return (_task_tcb->_task_state == OS_TASK_BLOCKING);
 }
@@ -76,7 +76,7 @@ void os_block_deinit(struct os_block_object *_block_obj)
 }
 
 /* 检测阻塞类对象链表是否为空 */
-__os_inline bool os_block_list_is_empty(struct os_block_object *_block_obj)
+inline bool os_block_list_is_empty(struct os_block_object *_block_obj)
 {
     return (list_empty(&_block_obj->_list));
 }
@@ -140,7 +140,7 @@ os_handle_state_t os_block_wakeup_task(struct task_control_block *_task_tcb)
 /*
  *@func: 将阻塞类对象链表中的第一个线程唤醒
  */
-__os_inline void os_block_wakeup_first_task(struct os_block_object *_block_obj,
+inline void os_block_wakeup_first_task(struct os_block_object *_block_obj,
                                             void (*callback)(struct task_control_block *task))
 {
     if (_block_obj->_list.next != &_block_obj->_list) {

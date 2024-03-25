@@ -171,7 +171,7 @@ static void sys_uart_register(void)
     os_device_open(sys_uart_handle, OS_DEVICE_RW);
 }
 
-__os_inline void sys_uart_write_flush(void)
+inline void sys_uart_write_flush(void)
 {
 
 }

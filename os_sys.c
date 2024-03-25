@@ -37,13 +37,13 @@ static void __idle_task_create(void)
     os_task_create(&_idle_tcb, (void *)idle_task_stack, IDLE_TASK_STACK_SIZE, IDLE_TASK_PRIO, os_idle_task, NULL, "KERNEL IDLE TASK");
 }
 
-__os_inline struct task_control_block *os_get_idle_tcb(void)
+inline struct task_control_block *os_get_idle_tcb(void)
 {
     return (&_idle_tcb);
 }
 
 // 1.为什么 printf 会占用没有被 ld 分配的内存区域？？？
-__os_static void __os_welcome_kprint(void)
+os_private void __os_welcome_kprint(void)
 {
     os_printk("***********\r\n");
     os_printk("* WELCOME *\r\n");
@@ -112,7 +112,7 @@ void os_sys_exit_irq(void)
     }
 }
 
-__os_inline void os_systick_handler(void)
+inline void os_systick_handler(void)
 {
     if (os_cpu_is_running()) {
         os_sched_timeslice_poll();

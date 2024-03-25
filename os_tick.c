@@ -21,7 +21,7 @@
 
 LIST_HEAD(_os_tick_list_head);
 
-__os_static void __os_tick_add_node(struct task_control_block *_task_tcb, unsigned int _tick)
+os_private void __os_tick_add_node(struct task_control_block *_task_tcb, unsigned int _tick)
 {
     // 更新task的block状态
     _task_tcb->_task_block_state = OS_TASK_BLOCK_TICKING;
@@ -58,7 +58,7 @@ __os_static void __os_tick_add_node(struct task_control_block *_task_tcb, unsign
         _current_node_tick->_tick_count -= new_tick->_tick_count;
 }
 
-__os_static void __os_tick_del_node(struct os_tick *ptr_tick)
+os_private void __os_tick_del_node(struct os_tick *ptr_tick)
 {
     list_del(&(ptr_tick->_tick_list_nd));
     os_free(ptr_tick);
@@ -89,7 +89,7 @@ os_handle_state_t os_add_tick_task(struct task_control_block *_task_tcb, unsigne
 //	}
 // }
 
-__os_static void tick_tcb_time_out_cb(struct task_control_block *task)
+os_private void tick_tcb_time_out_cb(struct task_control_block *task)
 {
     // task 目前处于 time out 状态
     task->_task_block_state = OS_TASK_BLOCK_TIMEOUT;
@@ -97,7 +97,7 @@ __os_static void tick_tcb_time_out_cb(struct task_control_block *task)
     os_rq_add_task(task);
 }
 
-__os_static void os_tick_del_all_task(struct os_tick *ptr_tick, void (*callback)(struct task_control_block *task))
+os_private void os_tick_del_all_task(struct os_tick *ptr_tick, void (*callback)(struct task_control_block *task))
 {
     struct list_head *_current_node = NULL;
     struct list_head *_next_node = NULL;

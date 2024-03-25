@@ -36,7 +36,7 @@ os_handle_state_t os_mqueue_init(struct os_mqueue *mq, unsigned short mnum, unsi
     return OS_HANDLE_SUCCESS;
 }
 
-__os_static __os_inline void __os_mqueue_send_cb(struct task_control_block *task)
+os_private inline void __os_mqueue_send_cb(struct task_control_block *task)
 {
     // tick
     list_del_init(&(task->_bt_nd));
@@ -96,7 +96,7 @@ os_handle_state_t os_mqueue_send(struct os_mqueue *mq,
     return OS_HANDLE_SUCCESS;
 }
 
-__os_static __os_inline void __os_mqueue_receive_cb(struct task_control_block *task)
+os_private inline void __os_mqueue_receive_cb(struct task_control_block *task)
 {
     // tick
     list_del_init(&(task->_bt_nd));

@@ -53,7 +53,9 @@ typedef struct task_control_block {
 
     struct os_block_object *_block_mount;
 
+    // mount to the TICK with BLOCK
     struct list_head _bt_nd;
+    // mount to the BLOCK
     struct list_head _slot_nd;
 } tcb_t;
 

@@ -39,8 +39,7 @@
 #define false 0
 #endif
 
-#define __os_inline inline
-#define __os_static static
+#define os_private static
 
 #define OS_NEVER_TIME_OUT (0xFFFFFFFF)
 

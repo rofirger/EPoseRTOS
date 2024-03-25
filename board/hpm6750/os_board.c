@@ -104,7 +104,7 @@ os_handle_state_t sys_uart_rx_indicate(struct os_device *dev, os_size_t size)
 #endif
 }
 
-__os_inline void sys_uart_write_flush(void)
+inline void sys_uart_write_flush(void)
 {
     uart_flush(SYS_UART);
 }

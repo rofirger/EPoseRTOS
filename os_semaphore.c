@@ -23,7 +23,7 @@ os_handle_state_t os_sem_init(struct os_sem *sem, unsigned short value)
     return OS_HANDLE_SUCCESS;
 }
 
-__os_inline os_handle_state_t os_sem_try_take(struct os_sem *sem)
+inline os_handle_state_t os_sem_try_take(struct os_sem *sem)
 {
     if (NULL == sem)
         return OS_HANDLE_FAIL;
@@ -65,7 +65,7 @@ os_handle_state_t os_sem_take(struct os_sem *sem, unsigned int time_out)
 }
 
 static bool is_take = false;
-__os_static __os_inline void __os_sem_release_cb(struct task_control_block *task)
+os_private inline void __os_sem_release_cb(struct task_control_block *task)
 {
     is_take = true;
     // 将该任务从挂载的tick上摘掉
