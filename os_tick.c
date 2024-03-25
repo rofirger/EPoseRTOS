@@ -93,6 +93,8 @@ os_private void __tick_tcb_time_out_cb(struct task_control_block *task)
 {
     // task 目前处于 time out 状态
     task->_task_block_state = OS_TASK_BLOCK_TIMEOUT;
+    // wake up from block list
+    list_del_init(&(task->_slot_nd));
     // 加入就绪队列
     os_rq_add_task(task);
 }
@@ -110,6 +112,37 @@ os_private void __os_tick_del_all_task(struct os_tick *ptr_tick, void (*callback
     }
     // 无task则free对应的tick对象
     __os_tick_del_node(ptr_tick);
+}
+
+os_private os_handle_state_t __os_wakeup_tick_task(struct task_control_block *task,
+                                                   void (*callback)(struct task_control_block *task))
+{
+    /*
+     * There is no need to worry if the TICK node wakes up "task"
+     * without any other task nodes attached,
+     * as the TICK subsystem will automatically reclaim it.
+     * */
+    list_del_init(&(task->_bt_nd));
+    callback(task);
+    return OS_HANDLE_SUCCESS;
+}
+
+os_private void __tick_tcb_early_wakeup_cb(struct task_control_block *task)
+{
+    // task 目前处于 time out 状态
+    task->_task_block_state = OS_TASK_BLOCK_EARLY_WAKEUP;
+    // wake up from block list
+    list_del_init(&(task->_slot_nd));
+    // 加入就绪队列
+    os_rq_add_task(task);
+}
+
+os_handle_state_t os_wakeup_tick_task(struct task_control_block *task)
+{
+    if (NULL == task ||
+        list_empty(&(task->_bt_nd)))
+        return OS_HANDLE_FAIL;
+    return __os_wakeup_tick_task(task, __tick_tcb_early_wakeup_cb);
 }
 
 /* 任务 tick 轮询 */

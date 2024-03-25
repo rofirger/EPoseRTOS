@@ -33,6 +33,7 @@ enum os_task_block_state {
     OS_TASK_BLOCK_NONE = 0,
     OS_TASK_BLOCK_TICKING = 1,
     OS_TASK_BLOCK_TIMEOUT = 2,
+    OS_TASK_BLOCK_EARLY_WAKEUP = 3,
 };
 
 typedef struct task_control_block {
