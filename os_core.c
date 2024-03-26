@@ -171,10 +171,11 @@ const char _os_state_str[5][11] = {
     "TERMINATED",
     " BLOCKING "};
 
-const char _os_block_state_str[3][8] = {
+const char _os_block_state_str[4][8] = {
     " NONE  ",
     "TICKING",
     "TIMEOUT",
+    "WAKEUP ",
 };
 
 os_private OS_CMD_PROCESS_FN(ps_fn)
