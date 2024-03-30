@@ -15,6 +15,8 @@
 #include "os_mqueue.h"
 #include "os_device.h"
 
+#include "components/lib/os_math.h"
+#include "components/lib/os_string.h"
 #include "components/memory/os_malloc.h"
 
 #include "board/libcpu_headfile.h"
