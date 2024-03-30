@@ -24,7 +24,7 @@
 // 开启调试
 #define CONFIG_OS_DEBUG
 // 堆大小
-#define CONFIG_HEAP_SIZE (51200)
+#define CONFIG_HEAP_SIZE (30720)
 
 #ifdef CONFIG_FISH
 // 内核终端线程的优先级

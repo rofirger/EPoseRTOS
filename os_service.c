@@ -114,7 +114,7 @@ static char *number(char *str,
         return 0;
     }
     c = (type & ZEROPAD) ? '0' : ' ';
-    if (type & SIGN && num < 0) {
+    if ((type & SIGN) && num < 0) {
         sign = '-';
         num = -num;
     } else {
@@ -296,7 +296,7 @@ int os_vsprintf(char *buf, const char *fmt, va_list args)
             break;
 
         case 'x':
-            flags |= SMALL;
+            flags |= SMALL; // @suppress("No break at end of case")
         case 'X':
             str = number(str, va_arg(args, unsigned long), 16,
                          field_width, precision, flags);
@@ -304,7 +304,7 @@ int os_vsprintf(char *buf, const char *fmt, va_list args)
 
         case 'd':
         case 'i':
-            flags |= SIGN;
+            flags |= SIGN; // @suppress("No break at end of case")
         case 'u':
             str = number(str, va_arg(args, unsigned long), 10,
                          field_width, precision, flags);
