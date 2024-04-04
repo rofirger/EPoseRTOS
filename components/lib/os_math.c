@@ -95,3 +95,20 @@ float os_atanf(float x)
     }
     return sum;
 }
+
+float os_sqrtf(float num)
+{
+    int i;
+    float x2, y;
+    const float threehalfs = 1.5F;
+
+    x2 = num * 0.5F;
+    y  = num;
+    i  = * ( int * ) &y;
+    i  = 0x5f375a86 - ( i >> 1 );
+    y  = * ( float * ) &i;
+    y  = y * ( threehalfs - ( x2 * y * y ) );
+    //y  = y * ( threehalfs - ( x2 * y * y ) );
+    //y  = y * ( threehalfs - ( x2 * y * y ) );
+    return num * y;
+}

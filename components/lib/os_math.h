@@ -18,5 +18,6 @@ float os_tanf(float rad);
 float os_asinf(float x);
 float os_acosf(float x);
 float os_atanf(float x);
+float os_sqrtf(float num);
 
 #endif /* _OS_MATH_H_ */
