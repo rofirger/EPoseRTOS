@@ -193,31 +193,32 @@ os_private OS_CMD_PROCESS_FN(ps_fn)
                         task_name_max_len : tmp_len;
     }
     task_name_max_len = task_name_max_len > 9 ? task_name_max_len : 9;
-    os_printk("+----+----------+--------+----------+----------+--------+-----|");
+    os_printk("+----+----------+--------+----------+----------+----------+--------+-----|");
     for (int j = 0; j < task_name_max_len; j++, os_printk("%c", '-'));
     os_printk("+\r\n");
-    os_printk("| id |   state  | bstate |  sp top  |    sp    |priority|slice|task name");
+    os_printk("| id |   state  | bstate |  sp top  |    sp    |stack used|priority|slice|task name");
     for (int j = 0; j < task_name_max_len - 9; j++, os_printk("%c", ' '));
     os_printk("|\r\n");
-    os_printk("+----+----------+--------+----------+----------+--------+-----|");
+    os_printk("+----+----------+--------+----------+----------+----------+--------+-----|");
     for (int j = 0; j < task_name_max_len; j++, os_printk("%c", '-'));
     os_printk("+\r\n");
     for (i = 0; i < OS_TASK_MAX_ID; ++i) {
         task = _os_id_tcb_tab[i];
         if (NULL != task) {
-            os_printk("|%4d|%s|%-8s|0x%8x|0x%8x|%8d|%5d|%-*s|\r\n",
+            os_printk("|%4d|%s|%-8s|0x%8x|0x%8x|0x%08x|%8d|%5d|%-*s|\r\n",
                       task->_task_id,
                       _os_state_str[task->_task_state - 1],
                       _os_block_state_str[task->_task_block_state],
                       task->_stack_top,
                       task->sp,
+                      (int)(task->_stack_top) - (int)(task->sp),
                       task->_task_priority,
                       task->_task_timeslice,
                       task_name_max_len,
                       task->_task_name);
         }
     }
-    os_printk("+----+----------+--------+----------+----------+--------+-----|");
+    os_printk("+----+----------+--------+----------+----------+----------+--------+-----|");
     for (int j = 0; j < task_name_max_len; j++, os_printk("%c", '-'));
     os_printk("+\r\n");
     return 0;
