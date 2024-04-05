@@ -22,6 +22,7 @@
 #include "stdarg.h"
 #include "string.h"
 #include "os_soft_timer.h"
+#include "os_config.h"
 
 #ifdef CONFIG_FISH
 
@@ -332,7 +333,7 @@ int os_vsprintf(char *buf, const char *fmt, va_list args)
     return str - buf;
 }
 
-static char __os_printk_buf[512];
+static char __os_printk_buf[CONFIG_OS_PRINTK_BUF_SIZE];
 void os_printk(const char *fmt, ...)
 {
 #ifdef CONFIG_PRINTK

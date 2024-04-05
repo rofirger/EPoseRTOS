@@ -11,31 +11,33 @@
 #ifndef _OS_CONFIG_H_
 #define _OS_CONFIG_H_
 
-// 开启FPU
+// enable FPU
 #define CONFIG_ARCH_FPU
-// 提供给RTOS的滴答时钟频率, 144MHz
+// SysTick frequency
 #define CONFIG_SYSTICK_CLOCK_FREQUENCY (144000000UL)
-// 开启终端
+// enable friendly-interface-shell
 #define CONFIG_FISH
-// 开启命令描述
+// reserve command description
 #define CONFIG_FISH_CMD_DESC
-// 开启os_printk
+// enable os_printk
 #define CONFIG_PRINTK
-// 开启调试
+// enable debug
 #define CONFIG_OS_DEBUG
-// 堆大小
+// the size of system heap, unit: byte
 #define CONFIG_HEAP_SIZE (30720)
+// the size of buffer in os_printk, unit: byte
+#define CONFIG_OS_PRINTK_BUF_SIZE  (512)
 
 #ifdef CONFIG_FISH
-// 内核终端线程的优先级
+// the priority of FISH thread
 #define OS_KTHREAD_FISH_PRIO (2)
 #endif
 
-// 可支持的最高优先级
+// MAX priority
 #define OS_TASK_MAX_PRIORITY (32)
-// 可支持的最大id值
+// MAX ID
 #define OS_TASK_MAX_ID (64)
-// 时间片
+// time slice, unit: ms
 #define OS_TIMESLICE_STD (10)
 
 #define OS_READY_LIST_SIZE  ((OS_TASK_MAX_PRIORITY) + 1)
