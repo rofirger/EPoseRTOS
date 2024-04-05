@@ -230,6 +230,7 @@ int os_vsprintf(char *buf, const char *fmt, va_list args)
                 field_width = -field_width;
                 flags |= LEFT;
             }
+            ++fmt;
         }
 
         /* get the precision */

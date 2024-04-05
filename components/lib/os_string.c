@@ -13,3 +13,10 @@ void *os_memset(void *dest, int set, unsigned len)
     }
     return dest;
 }
+
+unsigned int os_strlen(const char* str)
+{
+    const char* end = str;
+    while (*end++);
+    return end - str - 1;
+}
