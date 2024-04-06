@@ -73,6 +73,11 @@ void os_service_init(void);
 #define OS_CMD_EXPORT(cmd_name, cmd_function_call)
 #endif
 
+/*
+ * @note: argc IS the number of
+ *        REAL(Excluding the first one command) arguments.
+ * @example: INPUT"select 8", argc-> 1, argv[0]->"8"
+ * */
 #define OS_CMD_PROCESS_FN(funcion_name) \
     int funcion_name(int argc, char **argv)
 
