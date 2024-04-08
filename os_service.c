@@ -448,6 +448,10 @@ os_handle_state_t os_exec_cmd(char *cmd, unsigned int size, int *cmd_ret_val)
 
     *cmd_ret_val = cmd_call(argc - 1, &argv[1]);
 
+    // Restore cmd to its original data-set
+    for (unsigned int i = 0; i < size; ++i)
+        cmd[i] = (cmd[i] == '\0' ? ' ' : cmd[i]);
+
     return OS_HANDLE_SUCCESS;
 }
 
