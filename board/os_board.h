@@ -10,6 +10,7 @@
 #define _OS_BOARD_H_
 
 void os_board_init(void);
+void os_board_start_interrupt(void);
 struct os_device* os_get_sys_uart_device_handle(void);
 unsigned long os_hw_systick_get_reload(void);
 unsigned long os_hw_systick_get_val(void);

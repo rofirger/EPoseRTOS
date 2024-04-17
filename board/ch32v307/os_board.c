@@ -36,7 +36,7 @@ static void os_hw_systick_init(const uint64_t _reload_tick)
     // 向上计数时更新为 0，向下计数时更新为比较值 | 计数器中断使能控制位 | 启动系统计数器 STK | 自动装载
     SysTick->CTLR |= (1 << 5) | (1 << 1) | (1 << 0) | (1 << 3);
     NVIC_SetPriority(SysTicK_IRQn, 0xf0);     //设置SysTick中断优先级
-    NVIC_EnableIRQ(SysTicK_IRQn);           //使能开启Systick中断
+    NVIC_DisableIRQ(SysTicK_IRQn);
 }
 
 inline unsigned long os_hw_systick_get_reload(void)
@@ -99,7 +99,7 @@ os_handle_state_t sys_uart_hw_init(struct os_device* dev)
     NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
     NVIC_Init(&NVIC_InitStructure);
 
-    USART_ITConfig(USART1, USART_IT_RXNE, ENABLE);    /* 使能串口空闲中断 */
+    USART_ITConfig(USART1, USART_IT_RXNE, ENABLE);
 
     USART_Cmd(USART1, ENABLE);
 
@@ -175,8 +175,9 @@ inline void sys_uart_write_flush(void)
 {
 
 }
-
 /********************* system uart *********************/
+
+
 void os_set_sys_heap_head(void* ptr);
 void os_board_init(void)
 {
@@ -184,13 +185,32 @@ void os_board_init(void)
     os_set_sys_heap_head(malloc(CONFIG_HEAP_SIZE));
     /* 与 SysTick 的优先级相同  */
     NVIC_SetPriority(Software_IRQn, 0xf0);
-    NVIC_EnableIRQ(Software_IRQn);
-
+    NVIC_DisableIRQ(Software_IRQn);
     sys_uart_register();
 }
 
+/**
+ * @brief Start interrupts for the kernel.
+ *
+ * This function is called in the `os_sys_start()` function. It's purpose is to enable
+ * interrupts for the kernel. It ensures that the interrupts used by the kernel are enabled
+ * during the `os_sys_start` stage.
+ *
+ * @return None
+ *
+ * @note This function is essential for proper functioning of the kernel, as it enables the
+ *       interrupt mechanism required for handling various events and scheduling tasks. It
+ *       should be called ONLY during the `os_sys_start` stage to ensure that interrupts are
+ *       enabled at the appropriate time.
+ *       The SysTick interrupt MUST be enabled in the os_board_start_interrupt() function
+ *       and DISABLED during the initialization stage.
+ */
+void os_board_start_interrupt(void)
+{
+    NVIC_EnableIRQ(Software_IRQn);
+    NVIC_EnableIRQ(SysTicK_IRQn);
+}
 
-// 硬件压栈
 void SysTick_Handler(void) __attribute__((interrupt("WCH-Interrupt-fast")));
 void SysTick_Handler(void)
 {

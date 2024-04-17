@@ -30,7 +30,7 @@ struct os_tick {
 os_handle_state_t os_add_tick_task(struct task_control_block *_task_tcb, unsigned int _tick,
                                    struct os_block_object *_block_obj);
 void os_task_tick_poll(void);
-void os_task_delay_ms(unsigned int _tick_ms);
+os_handle_state_t os_task_delay_ms(unsigned int _tick_ms);
 os_handle_state_t os_wakeup_tick_task(struct task_control_block *task);
 
 #endif

@@ -73,13 +73,21 @@ void os_sys_init(void)
     _os_iqr_nesting = 0;
 }
 
-/* 实时系统内核启动 */
-/*** warning：该函数不返回 ***/
+/**
+ * @brief Start the kernel.
+ *
+ * @return None
+ *
+ * @note Prior to calling this function, hardware initialization and necessary system parameter
+ *       setup should be completed. This function typically does NOT RETURN; once the kernel
+ *       starts successfully, it enters the scheduling loop.
+ */
 void os_sys_start(void)
 {
     os_sched_init_ready();
     os_cpu_set_running();
     os_init_msp();
+    os_board_start_interrupt();
     os_ctx_sw();
     while (1) {
     };

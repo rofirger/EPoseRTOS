@@ -183,11 +183,10 @@ void os_task_tick_poll(void)
     __os_sched();
 }
 
-/* RTOS延时函数 */
-void os_task_delay_ms(unsigned int _tick_ms)
+os_handle_state_t os_task_delay_ms(unsigned int _tick_ms)
 {
     if (_tick_ms == 0)
-        return;
+        return OS_HANDLE_SUCCESS;
     OS_ENTER_CRITICAL
     struct task_control_block *_current_task_tcb = os_get_current_task_tcb();
     // 加入延时队列
@@ -195,4 +194,10 @@ void os_task_delay_ms(unsigned int _tick_ms)
     OS_EXIT_CRITICAL
     // 调度开启
     __os_sched();
+    if (_current_task_tcb->_task_block_state ==
+            OS_TASK_BLOCK_EARLY_WAKEUP) {
+        _current_task_tcb->_task_block_state = OS_TASK_BLOCK_NONE;
+        return OS_HANDLE_FAIL;
+    }
+    return OS_HANDLE_SUCCESS;
 }
