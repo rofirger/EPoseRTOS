@@ -23,6 +23,7 @@
 #include "string.h"
 #include "os_soft_timer.h"
 #include "os_config.h"
+#include "components/lib/os_string.h"
 
 #ifdef CONFIG_FISH
 
@@ -539,7 +540,7 @@ os_private os_handle_state_t __os_fish_irq_handle_default_fn(unsigned int rec)
                     if (__os_service_tin_list_tail != (&__os_service_tin_list)) {
                         struct os_fish_inp_nd *tmp =
                             os_list_entry(__os_service_tin_list_tail, struct os_fish_inp_nd, list_nd);
-                        memcpy(&input_buffer, tmp->data_pack, sizeof(struct os_service_fish_input));
+                        os_memcpy(&input_buffer, tmp->data_pack, sizeof(struct os_service_fish_input));
                         os_device_write(os_get_sys_uart_device_handle(), 0,
                                 (void *)input_buffer.data, input_buffer.size);
                         __os_service_tin_list_tail = __os_service_tin_list_tail->prev;
@@ -549,7 +550,7 @@ os_private os_handle_state_t __os_fish_irq_handle_default_fn(unsigned int rec)
                     if (__os_service_tin_list_tail->next != (&__os_service_tin_list)) {
                         struct os_fish_inp_nd *tmp =
                             os_list_entry(__os_service_tin_list_tail->next, struct os_fish_inp_nd, list_nd);
-                        memcpy(&input_buffer, tmp->data_pack, sizeof(struct os_service_fish_input));
+                        os_memcpy(&input_buffer, tmp->data_pack, sizeof(struct os_service_fish_input));
                         os_device_write(os_get_sys_uart_device_handle(), 0,
                                 (void *)input_buffer.data, input_buffer.size);
                         __os_service_tin_list_tail = __os_service_tin_list_tail->next;
@@ -711,7 +712,7 @@ void os_service_init(void)
     cmd_addr_end = (struct os_fish_cmd_structure *)&__os_fish_cmd_table_end;
 #endif
     os_mqueue_init(&__os_fish_inp_mq, 5, sizeof(struct os_service_fish_input));
-    os_mqueue_init(&__os_fish_step_inp_mq, 5, sizeof(struct os_service_fish_input));
+    os_mqueue_init(&__os_fish_step_inp_mq, 10, sizeof(struct os_service_fish_input));
     fish_irq_handle_vector[OS_FISH_IRQ_HANDLE_NONE] = NULL;
     fish_irq_handle_vector[OS_FISH_IRQ_HANDLE_DEFAULT] = __os_fish_irq_handle_default_fn;
     fish_irq_handle_vector[OS_FISH_IRQ_HANDLE_STEP] = __os_fish_irq_handle_step_fn;

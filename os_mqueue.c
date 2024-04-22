@@ -15,6 +15,7 @@
 #include "os_tick.h"
 #include "stddef.h"
 #include "string.h"
+#include "components/lib/os_string.h"
 
 struct mqueue_msg_pack {
     void *_buffer;
@@ -85,7 +86,7 @@ os_handle_state_t os_mqueue_send(struct os_mqueue *mq,
     OS_ASSERT(NULL != mq_pack);
     mq_pack->_buffer = os_malloc(msize);
     OS_ASSERT(NULL != mq_pack->_buffer);
-    memcpy(mq_pack->_buffer, buffer, msize);
+    os_memcpy(mq_pack->_buffer, buffer, msize);
     mq_pack->_size = msize;
     //  mq
     list_add_tail(&mq->_msg_queue, &mq_pack->_q_nd);
@@ -146,7 +147,7 @@ os_handle_state_t os_mqueue_receive(struct os_mqueue *mq,
 
     struct mqueue_msg_pack *_getmsg = NULL;
     _getmsg = os_list_first_entry(&mq->_msg_queue, struct mqueue_msg_pack, _q_nd);
-    memcpy(buffer, _getmsg->_buffer, msize);
+    os_memcpy(buffer, _getmsg->_buffer, msize);
     list_del_init(&_getmsg->_q_nd);
     os_free(_getmsg->_buffer);
     os_free(_getmsg);

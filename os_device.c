@@ -9,6 +9,7 @@
 #include "board/libcpu_headfile.h"
 #include "os_device.h"
 #include "string.h"
+#include "components/lib/os_string.h"
 
 static LIST_HEAD(__os_device_list);
 
@@ -17,7 +18,7 @@ void os_kobject_init(struct os_kobject *ko, const char *name)
     if (NULL == ko)
         return;
     unsigned int len = OS_NAME_MAX_LEN > strlen(name) ? strlen(name) : OS_NAME_MAX_LEN;
-    memcpy(ko->_name, name, len);
+    os_memcpy(ko->_name, name, len);
     list_head_init(&ko->_list);
 }
 
