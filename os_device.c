@@ -10,8 +10,26 @@
 #include "os_device.h"
 #include "string.h"
 #include "components/lib/os_string.h"
+#include "os_mutex.h"
+#include "board/os_board.h"
 
 static LIST_HEAD(__os_device_list);
+static struct os_mutex __os_device_mutex;
+
+/********************* system uart *********************/
+static struct os_device* sys_uart_handle;
+struct os_device* os_get_sys_uart_device_handle(void)
+{
+    return sys_uart_handle;
+}
+
+static void sys_uart_init(void)
+{
+    os_device_register(os_get_sys_uart_device(), "sys_uart", OS_DEVICE_RW);
+    sys_uart_handle =  os_device_find("sys_uart");
+    os_device_init(sys_uart_handle);
+    os_device_open(sys_uart_handle, OS_DEVICE_RW);
+}
 
 void os_kobject_init(struct os_kobject *ko, const char *name)
 {
@@ -33,19 +51,18 @@ struct os_device *os_device_find(const char *name)
     struct os_kobject *kobj;
     struct os_device *dev;
 
-    OS_ENTER_CRITICAL
-
+    os_mutex_lock(&__os_device_mutex, OS_MUTEX_NEVER_TIMEOUT);
     list_for_each(curren_pos, &__os_device_list)
     {
         kobj = os_list_entry(curren_pos, struct os_kobject, _list);
         if (strlen(name) == strlen(kobj->_name) &&
             strcmp(name, kobj->_name) == 0) {
             dev = os_container_of(kobj, struct os_device, _kobject);
-            OS_EXIT_CRITICAL
+            os_mutex_unlock(&__os_device_mutex);
             return dev;
         }
     }
-    OS_EXIT_CRITICAL
+    os_mutex_unlock(&__os_device_mutex);
     return NULL;
 }
 
@@ -65,12 +82,12 @@ os_handle_state_t os_device_register(struct os_device *dev,
     dev->_ref_count = 0;
     dev->_open_flag = 0;
 
-    OS_ENTER_CRITICAL
+    os_mutex_lock(&__os_device_mutex, OS_MUTEX_NEVER_TIMEOUT);
 
     list_add_tail(&__os_device_list, &(dev->_kobject._list));
     dev->_flag |= OS_DEVICE_REGISTER;
 
-    OS_EXIT_CRITICAL
+    os_mutex_unlock(&__os_device_mutex);
 
     return OS_HANDLE_SUCCESS;
 }
@@ -85,12 +102,12 @@ os_handle_state_t os_device_unregister(struct os_device *dev)
     if (NULL == dev)
         return OS_HANDLE_FAIL;
 
-    OS_ENTER_CRITICAL
+    os_mutex_lock(&__os_device_mutex, OS_MUTEX_NEVER_TIMEOUT);
 
     dev->_flag &= (~OS_DEVICE_REGISTER);
     os_kobject_deinit(&dev->_kobject);
 
-    OS_EXIT_CRITICAL
+    os_mutex_unlock(&__os_device_mutex);
 
     return OS_HANDLE_SUCCESS;
 }
@@ -256,4 +273,10 @@ os_handle_state_t os_device_set_tx_complete(struct os_device *dev,
     dev->tx_complete = tx_complete;
 
     return OS_HANDLE_SUCCESS;
+}
+
+void os_sys_device_init(void)
+{
+    os_mutex_init(&__os_device_mutex, OS_MUTEX_NO_RECURSIVE);
+    sys_uart_init();
 }

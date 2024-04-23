@@ -17,6 +17,7 @@
 #include "os_soft_timer.h"
 #include "os_sys.h"
 #include "os_tick.h"
+#include "os_device.h"
 
 #define IDLE_TASK_PRIO       OS_TASK_MAX_PRIORITY
 #define IDLE_TASK_STACK_SIZE 1024
@@ -50,26 +51,42 @@ os_private void __os_welcome_kprint(void)
     os_printk("***********\r\n");
 }
 
-/* 实时系统初始化 */
+/**
+ * @brief Initialize the operating system.
+ *
+ * This function initializes the operating system by performing the following steps:
+ * 1. Halt the scheduler.
+ * 2. Initialize the board.
+ * 3. Print kernel information.
+ * 4. Initialize memory.
+ * 5. Initialize the software timer.
+ * 6. Initialize the timeslice.
+ * 7. Initialize the system ready queue.
+ * 8. Initialize the device system.
+ * 9. Initialize the service.
+ * 10. Create the idle task.
+ * 11. Reset the interrupt nesting level to 0.
+ */
 void os_sys_init(void)
 {
-    // board init. Must be initialized first!!!
+    // halt the scheduler
+    os_sched_halt();
+    // board init
     os_board_init();
+    // initialize device system
+    os_sys_device_init();
     // print kernel info
     __os_welcome_kprint();
     // memory init
     os_memory_init();
-    // 定时器初始化
     os_soft_timer_init();
-    // 时间片初始化
+    // initialize timeslice
     os_sched_timeslice_init();
-    // 优先级队列初始化
-    os_ready_queue_init();
-    os_cpu_running_flag = 0;
-    // 创建空闲线程
-    __idle_task_create();
-    // 初始化service(如果开启Fish，则创建Fish线程)
+    os_sys_ready_queue_init();
+    // initialize service
     os_service_init();
+    // create idle task
+    __idle_task_create();
     _os_iqr_nesting = 0;
 }
 
@@ -84,10 +101,10 @@ void os_sys_init(void)
  */
 void os_sys_start(void)
 {
-    os_sched_init_ready();
-    os_cpu_set_running();
+    os_sched_insert_ready();
     os_init_msp();
     os_board_start_interrupt();
+    os_sched_set_running();
     os_ctx_sw();
     while (1) {
     };
@@ -103,7 +120,7 @@ bool os_sys_is_in_irq(void)
 void os_sys_enter_irq(void)
 {
     OS_ENTER_CRITICAL
-    if (os_cpu_is_running() &&
+    if (os_sched_is_running() &&
         _os_iqr_nesting < 255)
         _os_iqr_nesting++;
     OS_EXIT_CRITICAL
@@ -112,7 +129,7 @@ void os_sys_enter_irq(void)
 /* 退出中断 */
 void os_sys_exit_irq(void)
 {
-    if (os_cpu_is_running() &&
+    if (os_sched_is_running() &&
         os_sys_is_in_irq()) {
         OS_ENTER_CRITICAL
         _os_iqr_nesting--;
@@ -122,7 +139,7 @@ void os_sys_exit_irq(void)
 
 inline void os_systick_handler(void)
 {
-    if (os_cpu_is_running()) {
+    if (os_sched_is_running()) {
         os_sched_timeslice_poll();
         os_task_tick_poll();
     }

@@ -67,8 +67,6 @@ os_handle_state_t os_task_create(struct task_control_block *_task_tcb,
                                  __task_fn_ _entry_fn,
                                  void *_entry_fn_arg,
                                  const char *_task_name);
-bool os_cpu_is_running(void);
-void os_cpu_set_running(void);
 
 bool os_task_state_is_new(struct task_control_block *_task_tcb);
 void os_task_state_set_new(struct task_control_block *_task_tcb);

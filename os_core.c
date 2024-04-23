@@ -20,8 +20,6 @@
 
 static struct task_control_block *_os_id_tcb_tab[OS_TASK_MAX_ID];
 
-unsigned int os_cpu_running_flag = 0;
-
 /***********************************************************************************/
 /***********************************************************************************/
 /*********************** new ***********************/
@@ -81,16 +79,6 @@ inline void os_task_state_set_blocking(struct task_control_block *_task_tcb)
 
 /***********************************************************************************/
 /***********************************************************************************/
-
-inline bool os_cpu_is_running(void)
-{
-    return (os_cpu_running_flag == 1);
-}
-
-inline void os_cpu_set_running(void)
-{
-    os_cpu_running_flag = 1;
-}
 
 /* 线程退出 */
 os_private void __os_task_exit_handle(void)

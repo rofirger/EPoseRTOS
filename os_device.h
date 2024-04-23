@@ -93,5 +93,5 @@ os_handle_state_t os_device_set_rx_indicate(struct os_device *dev,
                                             os_handle_state_t (*rx_indicate)(struct os_device *dev, os_size_t size));
 os_handle_state_t os_device_set_tx_complete(struct os_device *dev,
                                             os_handle_state_t (*tx_complete)(struct os_device *dev, void *buffer));
-
+void os_sys_device_init(void);
 #endif

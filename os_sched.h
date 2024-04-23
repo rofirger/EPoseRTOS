@@ -31,7 +31,7 @@ unsigned char __get_highest_ready_priority(void);
 void os_rq_add_task(struct task_control_block *_task);
 void os_rq_del_task(struct task_control_block *_task);
 struct task_control_block *os_rq_get_highest_prio_task(void);
-void os_ready_queue_init(void);
+void os_sys_ready_queue_init(void);
 os_handle_state_t os_sched_lock(void);
 bool os_sched_is_lock(void);
 os_handle_state_t os_sched_unlock(void);
@@ -45,6 +45,10 @@ void os_enable_sched(void);
 struct task_control_block *os_get_current_task_tcb(void);
 void os_set_current_task_tcb(struct task_control_block *tcb);
 struct task_control_block *os_get_ready_task_tcb(void);
-void os_sched_init_ready(void);
+void os_sched_insert_ready(void);
 void __os_sched(void);
+void os_sched_halt(void);
+bool os_sched_is_running(void);
+void os_sched_set_running(void);
+
 #endif

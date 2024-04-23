@@ -57,13 +57,6 @@ void os_hw_systick_restore(void)
 }
 
 /********************* system uart *********************/
-static struct os_device* sys_uart_handle;
-
-struct os_device* os_get_sys_uart_device_handle(void)
-{
-    return sys_uart_handle;
-}
-
 os_handle_state_t sys_uart_hw_init(struct os_device* dev)
 {
     GPIO_InitTypeDef  GPIO_InitStructure  = {0};
@@ -145,7 +138,7 @@ os_handle_state_t sys_uart_rx_indicate(struct os_device* dev, os_size_t size)
 #endif
 }
 
-static struct os_file_operation sys_uart_file_ops = {
+static const struct os_file_operation sys_uart_file_ops = {
         .init  = sys_uart_hw_init,
         .write = sys_uart_write,
         .open  = sys_uart_open,
@@ -159,22 +152,20 @@ static struct os_device sys_uart_device = {
         ._flag       = OS_DEVICE_RW,
         .rx_indicate = sys_uart_rx_indicate,
         .tx_complete = NULL,
+        ._file_ops = sys_uart_file_ops,
         ._user_data  = NULL,
 };
-
-static void sys_uart_register(void)
-{
-    sys_uart_device._file_ops = sys_uart_file_ops;
-    os_device_register(&sys_uart_device, "sys_uart", OS_DEVICE_RW);
-    sys_uart_handle =  os_device_find("sys_uart");
-    os_device_init(sys_uart_handle);
-    os_device_open(sys_uart_handle, OS_DEVICE_RW);
-}
 
 inline void sys_uart_write_flush(void)
 {
 
 }
+
+inline struct os_device* os_get_sys_uart_device(void)
+{
+    return &sys_uart_device;
+}
+
 /********************* system uart *********************/
 
 
@@ -186,7 +177,6 @@ void os_board_init(void)
     /* 与 SysTick 的优先级相同  */
     NVIC_SetPriority(Software_IRQn, 0xf0);
     NVIC_DisableIRQ(Software_IRQn);
-    sys_uart_register();
 }
 
 /**
@@ -233,7 +223,7 @@ void USART1_IRQHandler(void)
     if(USART_GetITStatus(USART1, USART_IT_RXNE) != RESET)
     {
         USART_ClearITPendingBit(USART1, USART_IT_RXNE);
-        os_device_rx_indicate(sys_uart_handle, 1);
+        os_device_rx_indicate(os_get_sys_uart_device_handle(), 1);
     }
 
     os_sys_exit_irq();

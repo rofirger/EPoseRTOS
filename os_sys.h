@@ -11,8 +11,6 @@
 #define _OS_SYS_H_
 #include "os_core.h"
 
-extern unsigned int os_cpu_running_flag;
-
 struct task_control_block *os_get_idle_tcb(void);
 void os_sys_init(void);
 void os_sys_start(void);

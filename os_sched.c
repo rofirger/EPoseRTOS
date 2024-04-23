@@ -28,6 +28,8 @@ static struct os_sched_timeslice_pos _os_sched_timeslice_pos;
 struct task_control_block *os_task_current = NULL;
 struct task_control_block *os_task_ready = NULL;
 
+static unsigned char _os_sched_flag = 0;
+
 const unsigned char _lowest_bitmap[] =
     {
         0, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
@@ -180,7 +182,7 @@ struct task_control_block *os_rq_get_highest_prio_task(void)
 }
 
 /* 初始化就绪队列 */
-void os_ready_queue_init(void)
+void os_sys_ready_queue_init(void)
 {
     _os_rq._highest_priority = OS_TASK_MAX_PRIORITY;
     for (unsigned int _i = 0; _i < OS_READY_LIST_SIZE; ++_i)
@@ -201,7 +203,7 @@ inline bool os_sched_is_lock(void)
 os_handle_state_t os_sched_lock(void)
 {
     /* 递归调度锁层数不能超过200 */
-    if (!os_cpu_is_running() ||
+    if (!os_sched_is_running() ||
         os_sys_is_in_irq() ||
         _os_sched_lock_nesting > 200)
         return OS_HANDLE_FAIL;
@@ -215,7 +217,7 @@ os_handle_state_t os_sched_lock(void)
 os_handle_state_t os_sched_unlock(void)
 {
     /* 递归调度锁层数不能超过200 */
-    if (!os_cpu_is_running() ||
+    if (!os_sched_is_running() ||
         !os_sched_is_lock() ||
         os_sys_is_in_irq())
         return OS_HANDLE_FAIL;
@@ -297,7 +299,7 @@ inline struct task_control_block *os_get_ready_task_tcb(void)
     return os_task_ready;
 }
 
-inline void os_sched_init_ready(void)
+inline void os_sched_insert_ready(void)
 {
     os_task_ready = os_rq_get_highest_prio_task();
 }
@@ -310,7 +312,7 @@ void __os_sched(void)
     /*
      * 执行调度前提条件: 内核已启动; 不处于中断当中
      */
-    if (!os_cpu_is_running() ||
+    if (!os_sched_is_running() ||
         os_sys_is_in_irq()) {
         OS_EXIT_CRITICAL
         return;
@@ -341,6 +343,21 @@ void __os_sched(void)
     OS_EXIT_CRITICAL
     // 触发异常，以进行上下文切换
     os_ctx_sw();
+}
+
+inline void os_sched_halt(void)
+{
+    _os_sched_flag = 0;
+}
+
+inline bool os_sched_is_running(void)
+{
+    return (_os_sched_flag == 1);
+}
+
+inline void os_sched_set_running(void)
+{
+    _os_sched_flag = 1;
 }
 
 /*
