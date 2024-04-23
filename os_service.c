@@ -463,15 +463,15 @@ os_private void __tin_list_add_tail(struct os_service_fish_input *inp)
         // Free the 'first' one, the head of the queue.
         struct os_fish_inp_nd *tmp =
             os_list_entry(__os_service_tin_list.next, struct os_fish_inp_nd, list_nd);
-        os_free(tmp->data_pack);
+        os_kfree(tmp->data_pack);
         list_del(&tmp->list_nd);
-        os_free(tmp);
+        os_kfree(tmp);
         __os_service_tin_list_len--;
     }
 
     // Add a new one to the tail of queue.
     struct os_fish_inp_nd *nd =
-        (struct os_fish_inp_nd *)os_malloc(sizeof(struct os_fish_inp_nd));
+        (struct os_fish_inp_nd *)os_kmalloc(sizeof(struct os_fish_inp_nd));
     OS_ASSERT(NULL != nd);
     nd->data_pack = inp;
     list_add_tail(&__os_service_tin_list, &nd->list_nd);
@@ -488,8 +488,8 @@ os_private void __tin_list_clear(void)
         struct os_fish_inp_nd *tmp =
             os_list_entry(current_pos, struct os_fish_inp_nd, list_nd);
         list_del_init(&tmp->list_nd);
-        os_free(tmp->data_pack);
-        os_free(tmp);
+        os_kfree(tmp->data_pack);
+        os_kfree(tmp);
         __os_service_tin_list_len--;
     }
 }
@@ -498,7 +498,7 @@ static void __kthread_terminal(void *_arg)
 {
     struct os_service_fish_input *_inp;
     while (1) {
-        _inp = (struct os_service_fish_input *)os_malloc(sizeof(struct os_service_fish_input));
+        _inp = (struct os_service_fish_input *)os_kmalloc(sizeof(struct os_service_fish_input));
         OS_ASSERT(NULL != _inp);
         if (OS_HANDLE_SUCCESS ==
             os_mqueue_receive(os_get_fish_input_mq(), (void *)_inp,

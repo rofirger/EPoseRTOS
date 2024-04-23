@@ -169,11 +169,13 @@ inline struct os_device* os_get_sys_uart_device(void)
 /********************* system uart *********************/
 
 
-void os_set_sys_heap_head(void* ptr);
+void os_set_usr_heap_head(void* ptr);
+void os_set_kernel_heap_head(void* ptr);
 void os_board_init(void)
 {
     os_hw_systick_init(MS_TO_CLOCK_COUNT(1, CONFIG_SYSTICK_CLOCK_FREQUENCY));
-    os_set_sys_heap_head(malloc(CONFIG_HEAP_SIZE));
+    os_set_usr_heap_head(malloc(CONFIG_HEAP_SIZE));
+    os_set_kernel_heap_head(malloc(CONFIG_KERNEL_HEAP_SIZE));
     /* 与 SysTick 的优先级相同  */
     NVIC_SetPriority(Software_IRQn, 0xf0);
     NVIC_DisableIRQ(Software_IRQn);

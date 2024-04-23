@@ -12,6 +12,7 @@
 
 #include "os_config.h"
 #include "os_core.h"
+#include "os_block.h"
 
 #define OS_MUTEX_MAX_RECURSIVE 0xFF
 #define OS_MUTEX_PRIO_LOWEST   OS_TASK_MAX_PRIORITY

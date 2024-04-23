@@ -23,8 +23,10 @@
 #define CONFIG_PRINTK
 // enable debug
 #define CONFIG_OS_DEBUG
-// the size of system heap, unit: byte
-#define CONFIG_HEAP_SIZE (30720)
+// the size of user heap, unit: byte
+#define CONFIG_HEAP_SIZE (20480)
+// the size of kernel heap, unit: byte
+#define CONFIG_KERNEL_HEAP_SIZE (10240)
 // the size of buffer in os_printk, unit: byte
 #define CONFIG_OS_PRINTK_BUF_SIZE  (512)
 

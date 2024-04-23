@@ -16,12 +16,15 @@
 #include "../../os_def.h"
 #include "../../os_list.h"
 #include "../../os_service.h"
+#include "../../os_mutex.h"
 #include "../lib/os_string.h"
 #include "os_malloc.h"
 
 #define HEAP_MEM_MAGIC (0x6870) // magic number
 
 static LIST_HEAD(heap_list_head);
+static LIST_HEAD(kernel_heap_list_head);
+static struct os_mutex _usr_memery_op_mutex;
 
 struct heap_structure {
     void *heap_head;
@@ -29,6 +32,7 @@ struct heap_structure {
 };
 
 static volatile struct heap_structure heap = {.heap_head = NULL, .heap_size = 0};
+static volatile struct heap_structure kernel_heap = {.heap_head = NULL, .heap_size = 0};
 
 struct small_memory_header {
     unsigned short _magic;
@@ -44,10 +48,16 @@ struct small_memory_header {
  *
  * @return        void
  */
-void os_set_sys_heap_head(void* ptr)
+void os_set_usr_heap_head(void* ptr)
 {
     heap.heap_head = ptr;
     heap.heap_size = CONFIG_HEAP_SIZE;
+}
+
+void os_set_kernel_heap_head(void* ptr)
+{
+    kernel_heap.heap_head = ptr;
+    kernel_heap.heap_size = CONFIG_KERNEL_HEAP_SIZE;
 }
 
 /**
@@ -57,12 +67,20 @@ void os_set_sys_heap_head(void* ptr)
  */
 void os_memory_init(void)
 {
+    os_mutex_init(&_usr_memery_op_mutex, OS_MUTEX_RECURSIVE);
     OS_ASSERT(heap.heap_head != NULL);
     struct small_memory_header *_m = (struct small_memory_header *)heap.heap_head;
     _m->_magic = HEAP_MEM_MAGIC;
     _m->_size = heap.heap_size;
     _m->_used = false;
     list_add_tail(&heap_list_head, &(_m->_nd));
+
+    OS_ASSERT(kernel_heap.heap_head != NULL);
+    struct small_memory_header *_m_kernel = (struct small_memory_header *)kernel_heap.heap_head;
+    _m_kernel->_magic = HEAP_MEM_MAGIC;
+    _m_kernel->_size = kernel_heap.heap_size;
+    _m_kernel->_used = false;
+    list_add_tail(&kernel_heap_list_head, &(_m_kernel->_nd));
 }
 
 /**
@@ -127,6 +145,37 @@ void *os_calloc(unsigned int _nmemb, unsigned int _size)
 {
     unsigned int _s = _size * _nmemb;
     void *_mem = __os_malloc_base(&heap_list_head, _s);
+    os_memset(_mem, 0, _s);
+    return _mem;
+}
+
+void *os_malloc_safe(unsigned int _size)
+{
+    os_mutex_lock(&_usr_memery_op_mutex, OS_MUTEX_NEVER_TIMEOUT);
+    void *ret = __os_malloc_base(&heap_list_head, _size);
+    os_mutex_unlock(&_usr_memery_op_mutex);
+    return ret;
+}
+
+void *os_calloc_safe(unsigned int _nmemb, unsigned int _size)
+{
+    unsigned int _s = _size * _nmemb;
+    os_mutex_lock(&_usr_memery_op_mutex, OS_MUTEX_NEVER_TIMEOUT);
+    void *_mem = __os_malloc_base(&heap_list_head, _s);
+    os_mutex_unlock(&_usr_memery_op_mutex);
+    os_memset(_mem, 0, _s);
+    return _mem;
+}
+
+void* os_kmalloc(unsigned int _size)
+{
+    return __os_malloc_base(&kernel_heap_list_head, _size);
+}
+
+void *os_kcalloc(unsigned int _nmemb, unsigned int _size)
+{
+    unsigned int _s = _size * _nmemb;
+    void *_mem = __os_malloc_base(&kernel_heap_list_head, _s);
     os_memset(_mem, 0, _s);
     return _mem;
 }
@@ -230,6 +279,18 @@ void os_free(void *_ptr)
     __os_free_base(&heap_list_head, _ptr);
 }
 
+void os_free_safe(void *_ptr)
+{
+    os_mutex_lock(&_usr_memery_op_mutex, OS_MUTEX_NEVER_TIMEOUT);
+    __os_free_base(&heap_list_head, _ptr);
+    os_mutex_unlock(&_usr_memery_op_mutex);
+}
+
+void os_kfree(void *_ptr)
+{
+    __os_free_base(&kernel_heap_list_head, _ptr);
+}
+
 /**
  * Free memory [MUST BE] allocated by os_malloc_usr. **Non-thread-safe**
  *
@@ -259,5 +320,25 @@ OS_CMD_PROCESS_FN(memory_used)
     os_printk(":heap left->%d\r\n", _mleft);
     return _mleft;
 }
+OS_CMD_EXPORT(free, memory_used, "List the usage of user's heap.");
 
-OS_CMD_EXPORT(free, memory_used, "List the usage of heap.");
+OS_CMD_PROCESS_FN(kernel_memory_used)
+{
+    unsigned int _used_m = 0;
+    struct list_head *_current_pos;
+    struct small_memory_header *smh_this = NULL;
+    OS_ENTER_CRITICAL;
+    list_for_each(_current_pos, &kernel_heap_list_head)
+    {
+        smh_this = os_list_entry(_current_pos, struct small_memory_header, _nd);
+        if (smh_this->_used == true)
+            _used_m += smh_this->_size;
+    }
+    OS_EXIT_CRITICAL;
+    unsigned int _mleft = CONFIG_HEAP_SIZE - _used_m;
+    os_printk(":heap used->%d\r\n", _used_m);
+    os_printk(":heap left->%d\r\n", _mleft);
+    return _mleft;
+}
+
+OS_CMD_EXPORT(kfree, kernel_memory_used, "List the usage of kernel's heap.");

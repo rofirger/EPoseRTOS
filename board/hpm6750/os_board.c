@@ -136,7 +136,7 @@ static void sys_uart_register(void)
 
 /********************* system uart *********************/
 const uint32_t SYSTICK_RELOAD_VAL = (MS_TO_CLOCK_COUNT(1, CONFIG_SYSTICK_CLOCK_FREQUENCY));
-void os_set_sys_heap_head(void* ptr);
+void os_set_usr_heap_head(void* ptr);
 static unsigned char tmp_mem[CONFIG_HEAP_SIZE];
 void os_board_init(void)
 {
@@ -145,7 +145,7 @@ void os_board_init(void)
     // board_init_ahb();
 
     // init heap
-    os_set_sys_heap_head(tmp_mem);
+    os_set_usr_heap_head(tmp_mem);
 
     /* systick */
     os_hw_systick_init(SYSTICK_RELOAD_VAL);

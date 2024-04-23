@@ -45,7 +45,7 @@ os_private void __os_tick_add_node(struct task_control_block *_task_tcb, unsigne
         }
         _prev_tick = _current_tick;
     }
-    struct os_tick *new_tick = os_malloc(sizeof(struct os_tick));
+    struct os_tick *new_tick = os_kmalloc(sizeof(struct os_tick));
     OS_ASSERT(NULL != new_tick);
     new_tick->_tick_state = OS_TICK_RUNNING;
     new_tick->_tick_count = _tick - _prev_tick;
@@ -61,7 +61,7 @@ os_private void __os_tick_add_node(struct task_control_block *_task_tcb, unsigne
 os_private void __os_tick_del_node(struct os_tick *ptr_tick)
 {
     list_del(&(ptr_tick->_tick_list_nd));
-    os_free(ptr_tick);
+    os_kfree(ptr_tick);
 }
 
 os_handle_state_t os_add_tick_task(struct task_control_block *_task_tcb, unsigned int _tick,

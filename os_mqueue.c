@@ -82,9 +82,9 @@ os_handle_state_t os_mqueue_send(struct os_mqueue *mq,
     }
 
     struct mqueue_msg_pack *mq_pack =
-        (struct mqueue_msg_pack *)os_malloc(sizeof(struct mqueue_msg_pack));
+        (struct mqueue_msg_pack *)os_kmalloc(sizeof(struct mqueue_msg_pack));
     OS_ASSERT(NULL != mq_pack);
-    mq_pack->_buffer = os_malloc(msize);
+    mq_pack->_buffer = os_kmalloc(msize);
     OS_ASSERT(NULL != mq_pack->_buffer);
     os_memcpy(mq_pack->_buffer, buffer, msize);
     mq_pack->_size = msize;
@@ -149,8 +149,8 @@ os_handle_state_t os_mqueue_receive(struct os_mqueue *mq,
     _getmsg = os_list_first_entry(&mq->_msg_queue, struct mqueue_msg_pack, _q_nd);
     os_memcpy(buffer, _getmsg->_buffer, msize);
     list_del_init(&_getmsg->_q_nd);
-    os_free(_getmsg->_buffer);
-    os_free(_getmsg);
+    os_kfree(_getmsg->_buffer);
+    os_kfree(_getmsg);
 
     mq->_num_msgs--;
 
@@ -175,8 +175,8 @@ os_handle_state_t os_mqueue_clear(struct os_mqueue *mq)
         struct mqueue_msg_pack *_getmsg = NULL;
         _getmsg = os_list_first_entry(&mq->_msg_queue, struct mqueue_msg_pack, _q_nd);
         list_del_init(&_getmsg->_q_nd);
-        os_free(_getmsg->_buffer);
-        os_free(_getmsg);
+        os_kfree(_getmsg->_buffer);
+        os_kfree(_getmsg);
 
         mq->_num_msgs--;
 
