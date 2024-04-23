@@ -580,10 +580,10 @@ os_private os_handle_state_t __os_fish_irq_handle_default_fn(unsigned int rec)
         input_buffer.size = 0;
         break;
     case 127: // DEL (Delete)
+    case 8: // backspace
         if (input_buffer.size == 0)
             break;
-        input_buffer.data[input_buffer.size] = 0;
-        input_buffer.size--;
+        input_buffer.data[--input_buffer.size] = 0;
         os_device_write(os_get_sys_uart_device_handle(), 0, (void *)&rec, 2);
         break;
     case 9:  // tab
