@@ -122,8 +122,10 @@ os_private os_handle_state_t __os_wakeup_tick_task(struct task_control_block *ta
      * without any other task nodes attached,
      * as the TICK subsystem will automatically reclaim it.
      * */
+    __OS_OWNED_ENTER_CRITICAL
     list_del_init(&(task->_bt_nd));
     callback(task);
+    __OS_OWNED_EXIT_CRITICAL
     return OS_HANDLE_SUCCESS;
 }
 

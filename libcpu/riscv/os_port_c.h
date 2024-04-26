@@ -50,7 +50,10 @@ void os_port_init(void);
 #define OS_ENTER_CRITICAL unsigned int __critical_state__ = os_port_enter_critical();
 #define OS_EXIT_CRITICAL  os_port_exit_critical(__critical_state__);
 
-#define __OS_OWNED_ENTER_CRITICAL unsigned int __critical_state__ = __os_enter_sys_owned_critical();
-#define __OS_OWNED_EXIT_CRITICAL __os_exit_sys_owned_critical(__critical_state__);
+//#define __OS_OWNED_ENTER_CRITICAL unsigned int __critical_state__ = __os_enter_sys_owned_critical();
+//#define __OS_OWNED_EXIT_CRITICAL __os_exit_sys_owned_critical(__critical_state__);
+
+#define __OS_OWNED_ENTER_CRITICAL unsigned int __critical_state__ = os_port_enter_critical();
+#define __OS_OWNED_EXIT_CRITICAL  os_port_exit_critical(__critical_state__);
 
 #endif
