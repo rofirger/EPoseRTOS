@@ -99,12 +99,12 @@ unsigned int* os_process_stack_init(void* _fn_entry,
 									void* _stack_addr,
 									unsigned int _stack_size)
 {
-    // 栈向下生长， uint32_t对应struct os_hw_stack_frame的成员大小
+    // stack downgrowing
 	// locate end of _stack_addr
     unsigned int* _tmp_stack_addr = (unsigned int*)((unsigned int)_stack_addr + _stack_size - 1);
 	// note: 8-byte align		AAPCS  We must ensure that 8-byte alignment is maintained in C
 	_tmp_stack_addr = (unsigned int*)((unsigned int)(_tmp_stack_addr) & 0xFFFFFFF8UL);
-	// 储存上文
+	// save the context
 	_tmp_stack_addr = (unsigned int*)((unsigned int)_tmp_stack_addr - sizeof(struct os_hw_stack_frame));
 	
 	for (int i = 0; i < sizeof(struct os_hw_stack_frame) / sizeof(uint32_t); ++i)
@@ -146,39 +146,63 @@ void os_port_cpu_primask_set(unsigned int _primask)
 	asm volatile("csrw mstatus, %0" :: "r" (_primask));
 }
 
-/* 进入临界区 */
+/*
+ * Enter the critical section
+ * Disable all interrupts
+ * Return the interrupt state before entering the critical section
+ */
 unsigned int os_port_enter_critical(void)
 {
-//	unsigned int _ret = os_port_cpu_primask_get();
-//
-//	os_port_cpu_int_disable();
-//
     unsigned int _ret;
     asm("csrrw %0, mstatus, %1":"=r"(_ret):"r"(0x7800));
 	return _ret;
 } 
 
-/* 退出临界区 */
+/*
+ * Exit the critical section
+ * Reset the interrupt enable state based on the given state
+ * Parameter _state: The interrupt state before entering the critical section
+ */
 void os_port_exit_critical(unsigned int _state)
 {
 	os_port_cpu_primask_set(_state);
 }
 
+unsigned int __os_enter_sys_owned_critical(void)
+{
+    unsigned int old_status;
+    OS_ENTER_CRITICAL;
+    old_status = NVIC_GetStatusIRQ(Software_IRQn);
+    old_status &= NVIC_GetStatusIRQ(SysTicK_IRQn);
+    NVIC_DisableIRQ(Software_IRQn);
+    NVIC_DisableIRQ(SysTicK_IRQn);
+    OS_EXIT_CRITICAL;
+    return old_status;
+}
+
+void __os_exit_sys_owned_critical(unsigned int _state)
+{
+    OS_ENTER_CRITICAL;
+    if (_state) {
+        NVIC_EnableIRQ(Software_IRQn);
+        NVIC_EnableIRQ(SysTicK_IRQn);
+    }
+    OS_EXIT_CRITICAL;
+}
+
 /*
- * trigger soft interrupt
+ * Trigger Soft Interrupt
  */
 void os_ctx_sw(void)
 {
-    //SysTick->CTLR |= (1<<31);
     NVIC_SetPendingIRQ(Software_IRQn);
 }
 
 /*
- * clear soft interrupt
+ * Clear soft interrupt
  */
 void os_ctx_sw_clear(void)
 {
-    //SysTick->CTLR &= ~(1<<31);
     NVIC_ClearPendingIRQ(Software_IRQn);
 }
 
@@ -193,7 +217,7 @@ inline void os_ready_to_current(void)
 }
 
 /*
-* init interrupt stack pointer
+* Initialize interrupt stack pointer
 **/
 inline void os_init_msp(void)
 {

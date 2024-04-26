@@ -119,11 +119,11 @@ bool os_sys_is_in_irq(void)
 /* 进入中断, 此函数用于当系统处在中断函数中时禁止实时系统调度 */
 void os_sys_enter_irq(void)
 {
-    OS_ENTER_CRITICAL
+    __OS_OWNED_ENTER_CRITICAL
     if (os_sched_is_running() &&
         _os_iqr_nesting < 255)
         _os_iqr_nesting++;
-    OS_EXIT_CRITICAL
+    __OS_OWNED_EXIT_CRITICAL
 }
 
 /* 退出中断 */
@@ -131,9 +131,9 @@ void os_sys_exit_irq(void)
 {
     if (os_sched_is_running() &&
         os_sys_is_in_irq()) {
-        OS_ENTER_CRITICAL
+        __OS_OWNED_ENTER_CRITICAL
         _os_iqr_nesting--;
-        OS_EXIT_CRITICAL
+        __OS_OWNED_EXIT_CRITICAL
     }
 }
 

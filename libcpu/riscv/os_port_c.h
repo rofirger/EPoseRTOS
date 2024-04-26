@@ -25,6 +25,8 @@ unsigned int *os_process_stack_init(void *_fn_entry,
                                     unsigned int _stack_size);
 unsigned int os_port_enter_critical(void);
 void os_port_exit_critical(unsigned int _state);
+unsigned int __os_enter_sys_owned_critical(void);
+void __os_exit_sys_owned_critical(unsigned int _state);
 void os_port_cpu_int_disable(void);
 void os_port_cpu_int_enable(void);
 void os_port_init(void);
@@ -47,5 +49,8 @@ void os_port_init(void);
 
 #define OS_ENTER_CRITICAL unsigned int __critical_state__ = os_port_enter_critical();
 #define OS_EXIT_CRITICAL  os_port_exit_critical(__critical_state__);
+
+#define __OS_OWNED_ENTER_CRITICAL unsigned int __critical_state__ = __os_enter_sys_owned_critical();
+#define __OS_OWNED_EXIT_CRITICAL __os_exit_sys_owned_critical(__critical_state__);
 
 #endif

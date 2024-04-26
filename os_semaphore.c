@@ -34,31 +34,31 @@ os_handle_state_t os_sem_take(struct os_sem *sem, unsigned int time_out)
 {
     if (NULL == sem)
         return OS_HANDLE_FAIL;
-    OS_ENTER_CRITICAL
+    __OS_OWNED_ENTER_CRITICAL
     if (os_sem_try_take(sem)) {
         sem->_value--;
-        OS_EXIT_CRITICAL
+        __OS_OWNED_EXIT_CRITICAL
         return OS_HANDLE_SUCCESS;
     } else {
         struct task_control_block *_current_task_tcb = os_get_current_task_tcb();
         // 将当前任务挂起
         os_add_tick_task(_current_task_tcb, time_out, &sem->_block_obj);
-        OS_EXIT_CRITICAL
+        __OS_OWNED_EXIT_CRITICAL
         __os_sched();
         // 该处是为了给软中断异常被触发前留足时间
         while (os_task_is_block(_current_task_tcb)) {
         };
 
-        OS_ENTER_CRITICAL
+        __OS_OWNED_ENTER_CRITICAL
 
         // 超时
         if (_current_task_tcb->_task_block_state == OS_TASK_BLOCK_TIMEOUT) {
             _current_task_tcb->_task_block_state = OS_TASK_BLOCK_NONE;
-            OS_EXIT_CRITICAL
+            __OS_OWNED_EXIT_CRITICAL
             return OS_HANDLE_FAIL;
         } else {
             _current_task_tcb->_task_block_state = OS_TASK_BLOCK_NONE;
-            OS_EXIT_CRITICAL
+            __OS_OWNED_EXIT_CRITICAL
             return OS_HANDLE_SUCCESS;
         }
     }
@@ -76,12 +76,12 @@ os_handle_state_t os_sem_release(struct os_sem *sem)
 {
     if (NULL == sem)
         return OS_HANDLE_FAIL;
-    OS_ENTER_CRITICAL
+    __OS_OWNED_ENTER_CRITICAL
     sem->_value++;
     is_take = false;
     os_block_wakeup_first_task(&sem->_block_obj, __os_sem_release_cb);
     if (is_take)
         sem->_value--;
-    OS_EXIT_CRITICAL
+    __OS_OWNED_EXIT_CRITICAL
     return OS_HANDLE_SUCCESS;
 }

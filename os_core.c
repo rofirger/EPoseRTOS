@@ -83,14 +83,14 @@ inline void os_task_state_set_blocking(struct task_control_block *_task_tcb)
 /* 线程退出 */
 os_private void __os_task_exit_handle(void)
 {
-    OS_ENTER_CRITICAL
+    __OS_OWNED_ENTER_CRITICAL
 
     struct task_control_block *_ct_tcb = os_get_current_task_tcb();
     // 清除id
     _os_id_tcb_tab[_ct_tcb->_task_id] = NULL;
     // 将线程从就绪队列中清除
     os_rq_del_task(_ct_tcb);
-    OS_EXIT_CRITICAL
+    __OS_OWNED_EXIT_CRITICAL
     // 执行调度
     __os_sched();
 }
@@ -109,7 +109,7 @@ os_handle_state_t os_task_create(struct task_control_block *_task_tcb,
         _prio > OS_TASK_MAX_PRIORITY)
         return OS_HANDLE_FAIL;
 
-    OS_ENTER_CRITICAL
+    __OS_OWNED_ENTER_CRITICAL
 
     unsigned int _tmp_id = OS_TASK_MAX_ID + 1;
 
@@ -120,7 +120,7 @@ os_handle_state_t os_task_create(struct task_control_block *_task_tcb,
         }
     }
     if (_tmp_id > OS_TASK_MAX_ID) {
-        OS_EXIT_CRITICAL
+        __OS_OWNED_EXIT_CRITICAL
         return OS_HANDLE_FAIL;
     }
     _os_id_tcb_tab[_tmp_id] = _task_tcb;
@@ -145,7 +145,7 @@ os_handle_state_t os_task_create(struct task_control_block *_task_tcb,
 
     // 加入优先级队列
     os_rq_add_task(_task_tcb);
-    OS_EXIT_CRITICAL
+    __OS_OWNED_EXIT_CRITICAL
 
     // 	调度
     __os_sched();

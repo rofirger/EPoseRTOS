@@ -307,14 +307,14 @@ OS_CMD_PROCESS_FN(memory_used)
     unsigned int _used_m = 0;
     struct list_head *_current_pos;
     struct small_memory_header *smh_this = NULL;
-    OS_ENTER_CRITICAL;
+    __OS_OWNED_ENTER_CRITICAL;
     list_for_each(_current_pos, &heap_list_head)
     {
         smh_this = os_list_entry(_current_pos, struct small_memory_header, _nd);
         if (smh_this->_used == true)
             _used_m += smh_this->_size;
     }
-    OS_EXIT_CRITICAL;
+    __OS_OWNED_EXIT_CRITICAL;
     unsigned int _mleft = CONFIG_HEAP_SIZE - _used_m;
     os_printk(":heap used->%d\r\n", _used_m);
     os_printk(":heap left->%d\r\n", _mleft);
@@ -327,14 +327,14 @@ OS_CMD_PROCESS_FN(kernel_memory_used)
     unsigned int _used_m = 0;
     struct list_head *_current_pos;
     struct small_memory_header *smh_this = NULL;
-    OS_ENTER_CRITICAL;
+    __OS_OWNED_ENTER_CRITICAL;
     list_for_each(_current_pos, &kernel_heap_list_head)
     {
         smh_this = os_list_entry(_current_pos, struct small_memory_header, _nd);
         if (smh_this->_used == true)
             _used_m += smh_this->_size;
     }
-    OS_EXIT_CRITICAL;
+    __OS_OWNED_EXIT_CRITICAL;
     unsigned int _mleft = CONFIG_HEAP_SIZE - _used_m;
     os_printk(":heap used->%d\r\n", _used_m);
     os_printk(":heap left->%d\r\n", _mleft);

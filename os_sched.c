@@ -207,9 +207,9 @@ os_handle_state_t os_sched_lock(void)
         os_sys_is_in_irq() ||
         _os_sched_lock_nesting > 200)
         return OS_HANDLE_FAIL;
-    OS_ENTER_CRITICAL
+    __OS_OWNED_ENTER_CRITICAL
     _os_sched_lock_nesting++;
-    OS_EXIT_CRITICAL
+    __OS_OWNED_EXIT_CRITICAL
     return OS_HANDLE_SUCCESS;
 }
 
@@ -221,9 +221,9 @@ os_handle_state_t os_sched_unlock(void)
         !os_sched_is_lock() ||
         os_sys_is_in_irq())
         return OS_HANDLE_FAIL;
-    OS_ENTER_CRITICAL
+    __OS_OWNED_ENTER_CRITICAL
     _os_sched_lock_nesting--;
-    OS_EXIT_CRITICAL
+    __OS_OWNED_EXIT_CRITICAL
     // 再次执行调度
     __os_sched();
     return OS_HANDLE_SUCCESS;
@@ -307,14 +307,14 @@ inline void os_sched_insert_ready(void)
 /* 实时系统调度函数 */
 void __os_sched(void)
 {
-    OS_ENTER_CRITICAL
+    __OS_OWNED_ENTER_CRITICAL
 
     /*
      * 执行调度前提条件: 内核已启动; 不处于中断当中
      */
     if (!os_sched_is_running() ||
         os_sys_is_in_irq()) {
-        OS_EXIT_CRITICAL
+        __OS_OWNED_EXIT_CRITICAL
         return;
     }
 
@@ -333,14 +333,14 @@ void __os_sched(void)
     // 如果没有就绪任务 | 当前任务即就绪任务则不调度
     if (NULL == os_task_ready ||
         os_task_current == os_task_ready) {
-        OS_EXIT_CRITICAL
+        __OS_OWNED_EXIT_CRITICAL
         return;
     }
     // 更改任务状态
     os_task_state_set_running(os_task_ready);
     if (os_task_state_is_running(os_task_current))
         os_task_state_set_ready(os_task_current);
-    OS_EXIT_CRITICAL
+    __OS_OWNED_EXIT_CRITICAL
     // 触发异常，以进行上下文切换
     os_ctx_sw();
 }
