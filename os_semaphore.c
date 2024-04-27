@@ -83,5 +83,6 @@ os_handle_state_t os_sem_release(struct os_sem *sem)
     if (is_take)
         sem->_value--;
     __OS_OWNED_EXIT_CRITICAL
+    __os_sched();
     return OS_HANDLE_SUCCESS;
 }

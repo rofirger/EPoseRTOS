@@ -88,12 +88,11 @@ os_handle_state_t os_mqueue_send(struct os_mqueue *mq,
     OS_ASSERT(NULL != mq_pack->_buffer);
     os_memcpy(mq_pack->_buffer, buffer, msize);
     mq_pack->_size = msize;
-    //  mq
     list_add_tail(&mq->_msg_queue, &mq_pack->_q_nd);
     mq->_num_msgs++;
     os_block_wakeup_first_task(&mq->_suspend, __os_mqueue_send_cb);
-
     __OS_OWNED_EXIT_CRITICAL
+    __os_sched();
     return OS_HANDLE_SUCCESS;
 }
 
@@ -123,17 +122,16 @@ os_handle_state_t os_mqueue_receive(struct os_mqueue *mq,
         }
 
         struct task_control_block *_current_task_tcb = os_get_current_task_tcb();
-        //
+
         os_add_tick_task(_current_task_tcb, time_out, &mq->_suspend);
         __OS_OWNED_EXIT_CRITICAL
         __os_sched();
-        //
+
         while (os_task_is_block(_current_task_tcb)) {
         };
 
         __OS_OWNED_ENTER_CRITICAL
 
-        //
         if (_current_task_tcb->_task_block_state == OS_TASK_BLOCK_TIMEOUT) {
             _current_task_tcb->_task_block_state = OS_TASK_BLOCK_NONE;
             __OS_OWNED_EXIT_CRITICAL
@@ -141,7 +139,6 @@ os_handle_state_t os_mqueue_receive(struct os_mqueue *mq,
         } else {
             _current_task_tcb->_task_block_state = OS_TASK_BLOCK_NONE;
             __OS_OWNED_EXIT_CRITICAL
-            //
         }
     }
 
@@ -154,10 +151,9 @@ os_handle_state_t os_mqueue_receive(struct os_mqueue *mq,
 
     mq->_num_msgs--;
 
-    //
     os_block_wakeup_first_task(&mq->_suspend, __os_mqueue_receive_cb);
-
     __OS_OWNED_EXIT_CRITICAL
+    __os_sched();
     return OS_HANDLE_SUCCESS;
 }
 
@@ -180,11 +176,10 @@ os_handle_state_t os_mqueue_clear(struct os_mqueue *mq)
 
         mq->_num_msgs--;
 
-        //
         os_block_wakeup_first_task(&mq->_suspend, __os_mqueue_receive_cb);
         // clear
     }
-
     __OS_OWNED_EXIT_CRITICAL;
+    __os_sched();
     return OS_HANDLE_SUCCESS;
 }
