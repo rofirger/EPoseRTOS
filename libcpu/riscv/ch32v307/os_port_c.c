@@ -14,7 +14,7 @@
 #include "../../User/ch32v30x_it.h"
 #include "../../../os_core.h"
 #include "../../../os_config.h"
-#include "../../../os_atomic.h"
+#include"../os_atomic.h"
 
 extern struct task_control_block* os_task_current;
 extern struct task_control_block* os_task_ready;

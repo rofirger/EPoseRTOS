@@ -13,7 +13,6 @@
 #include "os_sched.h"
 #include "os_sys.h"
 #include "os_tick.h"
-#include "os_atomic.h"
 
 #include "board/libcpu_headfile.h"
 
