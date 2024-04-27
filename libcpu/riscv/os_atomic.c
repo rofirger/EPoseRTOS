@@ -10,7 +10,7 @@
 #include "../../os_def.h"
 #include "os_port_c.h"
 
-__FORCE_INLINE__ os_base_t os_atomic_load(volatile os_base_t *ptr)
+os_base_t os_atomic_load(volatile os_base_t *ptr)
 {
     os_base_t result = 0;
 #ifdef CONFIG_USING_HW_ATOMIC
@@ -27,7 +27,7 @@ __FORCE_INLINE__ os_base_t os_atomic_load(volatile os_base_t *ptr)
 /*
  * *ptr = val, ret = *ptr
  */
-__FORCE_INLINE__ os_base_t os_atomic_exchange(volatile os_base_t *ptr, os_base_t val)
+os_base_t os_atomic_exchange(volatile os_base_t *ptr, os_base_t val)
 {
     os_base_t result = 0;
 #ifdef CONFIG_USING_HW_ATOMIC
@@ -41,7 +41,7 @@ __FORCE_INLINE__ os_base_t os_atomic_exchange(volatile os_base_t *ptr, os_base_t
     return result;
 }
 
-__FORCE_INLINE__ os_base_t os_atomic_add(volatile os_base_t *ptr, os_base_t val)
+os_base_t os_atomic_add(volatile os_base_t *ptr, os_base_t val)
 {
     os_base_t result = 0;
 #ifdef CONFIG_USING_HW_ATOMIC
@@ -70,7 +70,7 @@ os_base_t os_atomic_sub(volatile os_base_t *ptr, os_base_t val)
     return result;
 }
 
-__FORCE_INLINE__ os_base_t os_atomic_xor(volatile os_base_t *ptr, os_base_t val)
+os_base_t os_atomic_xor(volatile os_base_t *ptr, os_base_t val)
 {
     os_base_t result = 0;
 #ifdef CONFIG_USING_HW_ATOMIC
@@ -84,7 +84,7 @@ __FORCE_INLINE__ os_base_t os_atomic_xor(volatile os_base_t *ptr, os_base_t val)
     return result;
 }
 
-__FORCE_INLINE__ os_base_t os_atomic_and(volatile os_base_t *ptr, os_base_t val)
+os_base_t os_atomic_and(volatile os_base_t *ptr, os_base_t val)
 {
     os_base_t result = 0;
 #ifdef CONFIG_USING_HW_ATOMIC
@@ -98,7 +98,7 @@ __FORCE_INLINE__ os_base_t os_atomic_and(volatile os_base_t *ptr, os_base_t val)
     return result;
 }
 
-__FORCE_INLINE__ os_base_t os_atomic_or(volatile os_base_t *ptr, os_base_t val)
+os_base_t os_atomic_or(volatile os_base_t *ptr, os_base_t val)
 {
     os_base_t result = 0;
 #ifdef CONFIG_USING_HW_ATOMIC
@@ -112,7 +112,7 @@ __FORCE_INLINE__ os_base_t os_atomic_or(volatile os_base_t *ptr, os_base_t val)
     return result;
 }
 
-__FORCE_INLINE__ void os_atomic_store(volatile os_base_t *ptr, os_base_t val)
+void os_atomic_store(volatile os_base_t *ptr, os_base_t val)
 {
 #ifdef CONFIG_USING_HW_ATOMIC
     os_base_t result = 0;
@@ -143,7 +143,7 @@ os_base_t os_atomic_flag_test_and_set(volatile os_base_t *ptr)
     return result;
 }
 
-__FORCE_INLINE__ void os_atomic_flag_clear(volatile os_base_t *ptr)
+void os_atomic_flag_clear(volatile os_base_t *ptr)
 {
 #ifdef CONFIG_USING_HW_ATOMIC
     os_base_t result = 0;

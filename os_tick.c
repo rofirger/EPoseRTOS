@@ -148,41 +148,62 @@ os_handle_state_t os_wakeup_tick_task(struct task_control_block *task)
 }
 
 /* 任务 tick 轮询 */
+static volatile unsigned int _in_crirical_poll_num;
 void os_task_tick_poll(void)
 {
-    __OS_OWNED_ENTER_CRITICAL
-    // os_sys_enter_irq();
-    if (list_empty(&_os_tick_list_head)) {
-        // os_sys_exit_irq();
-        __OS_OWNED_EXIT_CRITICAL
-        return;
-    }
-    struct os_tick *_current_tick_node = NULL;
-    _current_tick_node = os_list_first_entry(&_os_tick_list_head, struct os_tick, _tick_list_nd);
-    --(_current_tick_node->_tick_count);
-    if (_current_tick_node->_tick_count > 0) {
-        // os_sys_exit_irq();
-        __OS_OWNED_EXIT_CRITICAL
-        return;
-    }
-
-    struct list_head *_current_node;
-    struct list_head *_next_node;
-    /* 由于需要将_tick_count == 0的节点移除，
-       这里需要使用list_for_each_safe以免指针丢失 */
-    list_for_each_safe(_current_node, _next_node, &_os_tick_list_head)
-    {
-        _current_tick_node = os_list_entry(_current_node, struct os_tick, _tick_list_nd);
-        if (_current_tick_node->_tick_count > 0)
-            break;
-
+    if (os_sys_owned_critical_status()) {
+        __OS_OWNED_ENTER_CRITICAL
+        if (list_empty(&_os_tick_list_head)) {
+            __OS_OWNED_EXIT_CRITICAL
+            return;
+        }
+        struct os_tick *_current_tick_node = NULL;
+        _current_tick_node = os_list_first_entry(&_os_tick_list_head, struct os_tick, _tick_list_nd);
+        --(_current_tick_node->_tick_count);
+        if (_in_crirical_poll_num > _current_tick_node->_tick_count) {
+            _current_tick_node->_tick_count = 0;
+            _in_crirical_poll_num -= _current_tick_node->_tick_count;
+        } else {
+            _current_tick_node->_tick_count -= _in_crirical_poll_num;
+            _in_crirical_poll_num = 0;
+        }
+        if (_current_tick_node->_tick_count > 0) {
+            __OS_OWNED_EXIT_CRITICAL
+            return;
+        }
         // 从 _os_tick_list_head 队列中移除
         __os_tick_del_all_task(_current_tick_node, __tick_tcb_time_out_cb);
-    }
-    // os_sys_exit_irq();
-    __OS_OWNED_EXIT_CRITICAL
-    // 调度
-    __os_sched();
+
+        // Is there a ZERO after that
+        struct list_head *_current_node;
+        struct list_head *_next_node;
+        /* 由于需要将_tick_count == 0的节点移除，
+                                 这里需要使用list_for_each_safe以免指针丢失 */
+        list_for_each_safe(_current_node, _next_node, &_os_tick_list_head)
+        {
+            _current_tick_node = os_list_entry(_current_node, struct os_tick, _tick_list_nd);
+
+            if (_in_crirical_poll_num > _current_tick_node->_tick_count) {
+                _current_tick_node->_tick_count = 0;
+                _in_crirical_poll_num -= _current_tick_node->_tick_count;
+            } else {
+                _current_tick_node->_tick_count -= _in_crirical_poll_num;
+                _in_crirical_poll_num = 0;
+            }
+
+            if (_current_tick_node->_tick_count > 0)
+                break;
+
+            // 从 _os_tick_list_head 队列中移除
+            __os_tick_del_all_task(_current_tick_node, __tick_tcb_time_out_cb);
+        }
+        // Don't compromise the next roll of the task
+        _in_crirical_poll_num = 0;
+        __OS_OWNED_EXIT_CRITICAL
+        // 调度
+        __os_sched();
+    } else
+        _in_crirical_poll_num++;
 }
 
 os_handle_state_t os_task_delay_ms(unsigned int _tick_ms)

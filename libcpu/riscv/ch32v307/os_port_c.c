@@ -194,7 +194,7 @@ void __os_exit_sys_owned_critical(unsigned int _state)
  * @return  1 - SW Interrupt Enable
  *          0 - SW Interrupt Disable
  */
- os_base_t os_sys_owned_critical_status(void)
+__FORCE_INLINE__ os_base_t os_sys_owned_critical_status(void)
 {
      return NVIC_GetStatusIRQ(Software_IRQn);
 }

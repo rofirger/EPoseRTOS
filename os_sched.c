@@ -262,15 +262,27 @@ inline void os_sched_timeslice_reload(struct task_control_block *_task_tcb)
  * @brief   time-slice poll, ONLY called by os_systick_handler
  * @return  none
  */
+static volatile unsigned int _in_crirical_poll_num;
 void os_sched_timeslice_poll(void)
 {
-    if (os_sched_timeslice_get(os_task_current->_task_priority) != OS_SCHED_TIMESLICE_NULL) {
-        (os_task_current->_task_timeslice)--;
-        if (os_task_current->_task_timeslice > os_sched_timeslice_get(os_task_current->_task_priority))
-            os_task_current->_task_timeslice = 0;
-        if (os_task_current->_task_timeslice == 0) {
-            __os_sched();
+    if (os_sys_owned_critical_status()) {
+        if (os_sched_timeslice_get(os_task_current->_task_priority) != OS_SCHED_TIMESLICE_NULL) {
+            if (_in_crirical_poll_num >= os_task_current->_task_timeslice)
+                os_task_current->_task_timeslice = 0;
+            else {
+                (os_task_current->_task_timeslice) -= _in_crirical_poll_num;
+                (os_task_current->_task_timeslice)--;
+            }
+            _in_crirical_poll_num = 0;
+
+            if (os_task_current->_task_timeslice > os_sched_timeslice_get(os_task_current->_task_priority))
+                os_task_current->_task_timeslice = 0;
+            if (os_task_current->_task_timeslice == 0) {
+                __os_sched();
+            }
         }
+    } else {
+        _in_crirical_poll_num++;
     }
 }
 
