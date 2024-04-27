@@ -13,6 +13,7 @@
 #include "os_sched.h"
 #include "os_sys.h"
 #include "os_tick.h"
+#include "os_atomic.h"
 
 #include "board/libcpu_headfile.h"
 
@@ -255,7 +256,12 @@ inline void os_sched_timeslice_reload(struct task_control_block *_task_tcb)
     _task_tcb->_task_timeslice = os_sched_timeslice_get(_task_tcb->_task_priority);
 }
 
-/* 时间片轮询 */
+/*********************************************************************
+ * @fn      os_sched_timeslice_poll
+ * @param   none
+ * @brief   time-slice poll, ONLY called by os_systick_handler
+ * @return  none
+ */
 void os_sched_timeslice_poll(void)
 {
     if (os_sched_timeslice_get(os_task_current->_task_priority) != OS_SCHED_TIMESLICE_NULL) {

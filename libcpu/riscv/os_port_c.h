@@ -15,6 +15,7 @@ void os_ctx_sw(void);
 void os_ctx_sw_clear(void);
 void os_ready_to_current(void);
 void os_clear_systick_flag(void);
+os_base_t os_sys_owned_critical_status(void);
 /*
  * _stack_size: byte
  * */

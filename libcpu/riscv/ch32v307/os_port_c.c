@@ -14,6 +14,7 @@
 #include "../../User/ch32v30x_it.h"
 #include "../../../os_core.h"
 #include "../../../os_config.h"
+#include "../../../os_atomic.h"
 
 extern struct task_control_block* os_task_current;
 extern struct task_control_block* os_task_ready;
@@ -168,23 +169,36 @@ void os_port_exit_critical(unsigned int _state)
 	os_port_cpu_primask_set(_state);
 }
 
+static volatile os_base_t* ptr_sw_disable = &(NVIC->IRER[((uint32_t)(Software_IRQn) >> 5)]);
+static volatile os_base_t* ptr_sw_enable = &(NVIC->IENR[((uint32_t)(Software_IRQn) >> 5)]);
+static volatile os_base_t* ptr_sw_status = &(NVIC->ISR[(uint32_t)(Software_IRQn) >> 5]);
+static const os_base_t sw_val = (1 << ((uint32_t)(Software_IRQn) & 0x1F));
 unsigned int __os_enter_sys_owned_critical(void)
 {
     unsigned int old_status;
     old_status = NVIC_GetStatusIRQ(Software_IRQn);
-    OS_ENTER_CRITICAL;
-    NVIC_DisableIRQ(Software_IRQn);
-    OS_EXIT_CRITICAL;
+    os_atomic_store(ptr_sw_disable, sw_val);
     return old_status;
 }
 
 void __os_exit_sys_owned_critical(unsigned int _state)
 {
-    OS_ENTER_CRITICAL;
     if (_state) {
-        NVIC_EnableIRQ(Software_IRQn);
+        os_atomic_store(ptr_sw_enable, sw_val);
     }
-    OS_EXIT_CRITICAL;
+}
+
+/*********************************************************************
+ * @fn      os_sys_owned_critical_status
+ * @param   none
+ * @brief   Get SW Interrupt Enable State
+ * @return  1 - SW Interrupt Enable
+ *          0 - SW Interrupt Disable
+ */
+ os_base_t os_sys_owned_critical_status(void)
+{
+     os_base_t val = os_atomic_load(ptr_sw_status);
+     return (val & sw_val) ? 1 : 0;
 }
 
 /*
