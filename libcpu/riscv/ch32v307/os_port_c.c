@@ -171,7 +171,6 @@ void os_port_exit_critical(unsigned int _state)
 
 static volatile os_base_t* ptr_sw_disable = &(NVIC->IRER[((uint32_t)(Software_IRQn) >> 5)]);
 static volatile os_base_t* ptr_sw_enable = &(NVIC->IENR[((uint32_t)(Software_IRQn) >> 5)]);
-static volatile os_base_t* ptr_sw_status = &(NVIC->ISR[(uint32_t)(Software_IRQn) >> 5]);
 static const os_base_t sw_val = (1 << ((uint32_t)(Software_IRQn) & 0x1F));
 unsigned int __os_enter_sys_owned_critical(void)
 {
@@ -197,8 +196,7 @@ void __os_exit_sys_owned_critical(unsigned int _state)
  */
  os_base_t os_sys_owned_critical_status(void)
 {
-     os_base_t val = os_atomic_load(ptr_sw_status);
-     return (val & sw_val) ? 1 : 0;
+     return NVIC_GetStatusIRQ(Software_IRQn);
 }
 
 /*

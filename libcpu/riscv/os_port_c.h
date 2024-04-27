@@ -10,6 +10,7 @@
 #ifndef _OS_PORT_H_
 #define _OS_PORT_H_
 
+#include "../../os_def.h"
 void os_init_msp(void);
 void os_ctx_sw(void);
 void os_ctx_sw_clear(void);
