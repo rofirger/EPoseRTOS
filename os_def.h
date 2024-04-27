@@ -15,12 +15,14 @@
 #define __OS_OPTIMIZE_O2__ __attribute__((optimize("O2")))
 #define __OS_OPTIMIZE_O3__ __attribute__((optimize("O3")))
 #define __OS_OPTIMIZE_Os__ __attribute__((optimize("Os")))
+# define __FORCE_INLINE__ __attribute__((always_inline)) inline
 #else
 #define __OS_OPTIMIZE_O0__
 #define __OS_OPTIMIZE_O1__
 #define __OS_OPTIMIZE_O2__
 #define __OS_OPTIMIZE_O3__
 #define __OS_OPTIMIZE_Os__
+# define __FORCE_INLINE__  inline
 #endif
 
 #ifndef bool
@@ -46,6 +48,8 @@
 typedef int os_ssize_t;
 typedef long os_off_t;
 typedef unsigned long os_size_t;
+typedef signed long os_base_t;
+typedef unsigned long os_ubase_t;
 
 typedef enum os_handle_state {
     OS_HANDLE_FAIL = 0,

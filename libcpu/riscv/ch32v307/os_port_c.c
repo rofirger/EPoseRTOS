@@ -171,11 +171,9 @@ void os_port_exit_critical(unsigned int _state)
 unsigned int __os_enter_sys_owned_critical(void)
 {
     unsigned int old_status;
-    OS_ENTER_CRITICAL;
     old_status = NVIC_GetStatusIRQ(Software_IRQn);
-    old_status &= NVIC_GetStatusIRQ(SysTicK_IRQn);
+    OS_ENTER_CRITICAL;
     NVIC_DisableIRQ(Software_IRQn);
-    NVIC_DisableIRQ(SysTicK_IRQn);
     OS_EXIT_CRITICAL;
     return old_status;
 }
@@ -185,7 +183,6 @@ void __os_exit_sys_owned_critical(unsigned int _state)
     OS_ENTER_CRITICAL;
     if (_state) {
         NVIC_EnableIRQ(Software_IRQn);
-        NVIC_EnableIRQ(SysTicK_IRQn);
     }
     OS_EXIT_CRITICAL;
 }

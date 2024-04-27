@@ -12,7 +12,7 @@
 #include "os_soft_timer.h"
 
 static uint32_t _irq_times_s;
-struct jiffies_structure jiffies;
+static struct jiffies_structure jiffies;
 
 static soft_timer_t soft_timer[SOFT_TIMER_NUM];
 

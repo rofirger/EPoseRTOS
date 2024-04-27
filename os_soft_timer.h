@@ -72,6 +72,4 @@ int soft_timer_get_2_time_diff_us(const soft_timer_time_t _e, const soft_timer_t
 
 #define os_soft_timer_reset_systick_times() os_soft_timer_set_systick_times(0)
 
-extern struct jiffies_structure jiffies;
-
 #endif

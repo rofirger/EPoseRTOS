@@ -525,11 +525,11 @@ os_private os_handle_state_t __os_fish_irq_handle_default_fn(unsigned int rec)
     if (27 == rec) {
         combination_keys_index = 0;
         combination_keys[combination_keys_index++] = (unsigned char)rec;
-        last_jiffies = jiffies;
+        last_jiffies = os_get_timestamp();
         return OS_HANDLE_SUCCESS;
     }
     if (0 != combination_keys_index &&
-        jiffies.c - last_jiffies.c < 100) {
+        os_get_timestamp().c - last_jiffies.c < 100) {
         combination_keys[combination_keys_index++] = (unsigned char)rec;
         if (combination_keys_index == 3) {
             os_fish_clear_input_buffer(true);
@@ -566,7 +566,7 @@ os_private os_handle_state_t __os_fish_irq_handle_default_fn(unsigned int rec)
             }
             combination_keys_index = 0;
         }
-        last_jiffies = jiffies;
+        last_jiffies = os_get_timestamp();
         return OS_HANDLE_SUCCESS;
     } else {
         combination_keys_index = 0;
@@ -595,7 +595,7 @@ os_private os_handle_state_t __os_fish_irq_handle_default_fn(unsigned int rec)
         break;
     }
 
-    last_jiffies = jiffies;
+    last_jiffies = os_get_timestamp();
     return OS_HANDLE_SUCCESS;
 }
 

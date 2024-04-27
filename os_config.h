@@ -15,6 +15,8 @@
 #define CONFIG_ARCH_FPU
 // SysTick frequency
 #define CONFIG_SYSTICK_CLOCK_FREQUENCY (144000000UL)
+// enable atomic instruction-set
+#define CONFIG_USING_HW_ATOMIC
 // enable friendly-interface-shell
 #define CONFIG_FISH
 // reserve command description
