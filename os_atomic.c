@@ -109,9 +109,11 @@ void os_atomic_flag_clear(volatile os_base_t *ptr)
     OS_EXIT_CRITICAL
 }
 
-os_base_t os_atomic_compare_exchange_strong(volatile os_base_t *ptr, os_base_t *old, os_base_t desired)
+os_base_t os_atomic_compare_exchange_strong(volatile os_base_t *ptr,
+                                            os_base_t *old,
+                                            volatile os_base_t desired)
 {
-    os_base_t result = 0;
+    volatile os_base_t result = 0;
     OS_ENTER_CRITICAL
     if ((*ptr) != (*old)){
         *old = *ptr;
@@ -124,9 +126,11 @@ os_base_t os_atomic_compare_exchange_strong(volatile os_base_t *ptr, os_base_t *
     return result;
 }
 
-os_base_t os_atomic_bge_set_strong(volatile os_base_t *ptr, os_base_t limit, os_base_t desired)
+os_base_t os_atomic_bge_set_strong(volatile os_base_t *ptr,
+                                   volatile os_base_t limit,
+                                   volatile os_base_t desired)
 {
-    os_base_t result = 0;
+    volatile os_base_t result = 0;
     OS_ENTER_CRITICAL
     if ((*ptr) >= limit) {
         *ptr = desired;
@@ -138,12 +142,15 @@ os_base_t os_atomic_bge_set_strong(volatile os_base_t *ptr, os_base_t limit, os_
     return result;
 }
 
-os_base_t os_atomic_add_bge_set_strong(volatile os_base_t *ptr, os_base_t add_num, os_base_t limit, os_base_t desired)
+os_base_t os_atomic_add_bge_set_strong(volatile os_base_t *ptr,
+                                       volatile os_base_t add_num,
+                                       volatile os_base_t limit,
+                                       volatile os_base_t desired)
 {
     OS_ENTER_CRITICAL
     os_base_t result = *ptr;
     os_base_t tmp = result;
-    tmp += add;
+    tmp += add_num;
     if (tmp >= limit) {
         *ptr = desired;
     } else {

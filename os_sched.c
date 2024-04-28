@@ -326,9 +326,6 @@ void __os_sched(void)
 {
     __OS_OWNED_ENTER_CRITICAL
 
-    /*
-     * 执行调度前提条件: 内核已启动
-     */
     if (!os_sched_is_running()) {
         __OS_OWNED_EXIT_CRITICAL
         return;

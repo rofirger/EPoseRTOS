@@ -15,14 +15,16 @@
 #define __OS_OPTIMIZE_O2__ __attribute__((optimize("O2")))
 #define __OS_OPTIMIZE_O3__ __attribute__((optimize("O3")))
 #define __OS_OPTIMIZE_Os__ __attribute__((optimize("Os")))
-# define __FORCE_INLINE__ __attribute__((always_inline)) inline
+#define __FORCE_INLINE__ __attribute__((always_inline)) inline
+#define __OS_ALIGNED__(s) __attribute__((aligned(s)))
 #else
 #define __OS_OPTIMIZE_O0__
 #define __OS_OPTIMIZE_O1__
 #define __OS_OPTIMIZE_O2__
 #define __OS_OPTIMIZE_O3__
 #define __OS_OPTIMIZE_Os__
-# define __FORCE_INLINE__  inline
+#define __FORCE_INLINE__  inline
+#define __OS_ALIGNED__(s)
 #endif
 
 #ifndef bool

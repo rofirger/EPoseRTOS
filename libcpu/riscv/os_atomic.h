@@ -84,10 +84,12 @@ __FORCE_INLINE__ void os_atomic_flag_clear(volatile os_base_t *ptr)
     asm volatile ("amoand.w %0, x0, (%1)" : "=r"(result) :"r"(ptr) : "memory");
 }
 
-__FORCE_INLINE__ os_base_t os_atomic_compare_exchange_strong(volatile os_base_t *ptr, os_base_t *old, os_base_t desired)
+__FORCE_INLINE__ os_base_t os_atomic_compare_exchange_strong(volatile os_base_t *ptr,
+                                                             os_base_t *old,
+                                                             volatile os_base_t desired)
 {
-    os_base_t result = 0;
-    os_base_t tmp = *old;
+    volatile os_base_t result = 0;
+    volatile os_base_t tmp = *old;
     asm volatile(
             " fence iorw, ow\n"
             "1: lr.w.aq  %[result], (%[ptr])\n"
@@ -105,9 +107,11 @@ __FORCE_INLINE__ os_base_t os_atomic_compare_exchange_strong(volatile os_base_t 
     return result;
 }
 
-__FORCE_INLINE__ os_base_t os_atomic_bge_set_strong(volatile os_base_t *ptr, os_base_t limit, os_base_t desired)
+__FORCE_INLINE__ os_base_t os_atomic_bge_set_strong(volatile os_base_t *ptr,
+                                                    volatile os_base_t limit,
+                                                    volatile os_base_t desired)
 {
-    os_base_t result = 0;
+    volatile os_base_t result = 0;
     asm volatile(
             " fence iorw, ow\n"
             "1: lr.w.aq  %[result], (%[ptr])\n"
@@ -123,11 +127,14 @@ __FORCE_INLINE__ os_base_t os_atomic_bge_set_strong(volatile os_base_t *ptr, os_
     return result;
 }
 
-__FORCE_INLINE__ os_base_t os_atomic_add_bge_set_strong(volatile os_base_t *ptr, os_base_t add_num, os_base_t limit, os_base_t desired)
+__FORCE_INLINE__ os_base_t os_atomic_add_bge_set_strong(volatile os_base_t *ptr,
+                                                        volatile os_base_t add_num,
+                                                        volatile os_base_t limit,
+                                                        volatile os_base_t desired)
 {
-    os_base_t result = 0;
-    os_base_t tmp = 0;
-    os_base_t flag = 0;
+    volatile os_base_t result = 0;
+    volatile os_base_t tmp = 0;
+    volatile os_base_t flag = 0;
     asm volatile(
             " fence iorw, ow\n"
             "1: lr.w.aq  %[result], (%[ptr])\n"
@@ -155,8 +162,15 @@ os_base_t os_atomic_and(volatile os_base_t *ptr, os_base_t val);
 os_base_t os_atomic_or(volatile os_base_t *ptr, os_base_t val);
 os_base_t os_atomic_flag_test_and_set(volatile os_base_t *ptr);
 void os_atomic_flag_clear(volatile os_base_t *ptr);
-os_base_t os_atomic_compare_exchange_strong(volatile os_base_t *ptr, os_base_t *old, os_base_t desired);
-os_base_t os_atomic_bge_set_strong(volatile os_base_t *ptr, os_base_t limit, os_base_t desired);
-os_base_t os_atomic_add_bge_set_strong(volatile os_base_t *ptr, os_base_t add_num, os_base_t limit, os_base_t desired);
+os_base_t os_atomic_compare_exchange_strong(volatile os_base_t *ptr,
+                                            os_base_t *old,
+                                            volatile os_base_t desired);
+os_base_t os_atomic_bge_set_strong(volatile os_base_t *ptr,
+                                   volatile os_base_t limit,
+                                   volatile os_base_t desired);
+os_base_t os_atomic_add_bge_set_strong(volatile os_base_t *ptr,
+                                       volatile os_base_t add_num,
+                                       volatile os_base_t limit,
+                                       volatile os_base_t desired);
 #endif
 #endif /* _OS_ATOMIC_H_ */
