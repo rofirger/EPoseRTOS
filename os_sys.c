@@ -18,7 +18,6 @@
 #include "os_sys.h"
 #include "os_tick.h"
 #include "os_device.h"
-#include "os_int_post.h"
 
 #define IDLE_TASK_PRIO       OS_TASK_MAX_PRIORITY
 #define IDLE_TASK_STACK_SIZE 1024
@@ -86,7 +85,6 @@ void os_sys_init(void)
     os_sys_ready_queue_init();
     // initialize service
     os_service_init();
-    os_int_post_init();
     // create idle task
     __idle_task_create();
     _os_iqr_nesting = 0;

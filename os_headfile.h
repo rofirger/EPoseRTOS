@@ -14,7 +14,6 @@
 #include "os_semaphore.h"
 #include "os_mqueue.h"
 #include "os_device.h"
-#include "os_int_post.h"
 
 #include "components/lib/os_math.h"
 #include "components/lib/os_string.h"
