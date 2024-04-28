@@ -31,6 +31,8 @@
 #define CONFIG_KERNEL_HEAP_SIZE (10240)
 // the size of buffer in os_printk, unit: byte
 #define CONFIG_OS_PRINTK_BUF_SIZE  (512)
+// the number of int-post object buffer
+#define CONFIG_OS_INT_POST_NUM (10)
 
 #ifdef CONFIG_FISH
 // the priority of FISH thread

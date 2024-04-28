@@ -104,6 +104,46 @@ __FORCE_INLINE__ os_base_t os_atomic_compare_exchange_strong(volatile os_base_t 
             : "memory");
     return result;
 }
+
+__FORCE_INLINE__ os_base_t os_atomic_bge_set_strong(volatile os_base_t *ptr, os_base_t limit, os_base_t desired)
+{
+    os_base_t result = 0;
+    asm volatile(
+            " fence iorw, ow\n"
+            "1: lr.w.aq  %[result], (%[ptr])\n"
+            "   blt      %[result], %[limit], 2f\n"
+            "   sc.w.rl  %[result], %[desired], (%[ptr])\n"
+            "   bnez     %[result], 1b\n"
+            "   j 3f\n"
+            " 2: li  %[result], 1\n"
+            " 3:\n"
+            : [result]"+r" (result),  [ptr]"+r" (ptr)
+            : [desired]"r" (desired), [limit]"r" (limit)
+            : "memory");
+    return result;
+}
+
+__FORCE_INLINE__ os_base_t os_atomic_add_bge_set_strong(volatile os_base_t *ptr, os_base_t add_num, os_base_t limit, os_base_t desired)
+{
+    os_base_t result = 0;
+    os_base_t tmp = 0;
+    os_base_t flag = 0;
+    asm volatile(
+            " fence iorw, ow\n"
+            "1: lr.w.aq  %[result], (%[ptr])\n"
+            "   add %[tmp], %[result], %[add_num]\n"
+            "   blt      %[tmp], %[limit], 2f\n"
+            "   sc.w.rl  %[flag], %[desired], (%[ptr])\n"
+            "   bnez     %[flag], 1b\n"
+            "   j 3f\n"
+            "2: sc.w.rl  %[flag], %[tmp], (%[ptr])\n"
+            "   bnez     %[flag], 1b\n"
+            "3:\n"
+            : [result]"+r" (result),  [ptr]"+r" (ptr), [flag]"+r" (flag), [tmp]"+r" (tmp)
+            : [desired]"r" (desired), [limit]"r" (limit), [add_num]"r" (add_num)
+            : "memory");
+    return result;
+}
 #else
 os_base_t os_atomic_load(volatile os_base_t *ptr);
 void os_atomic_store(volatile os_base_t *ptr, os_base_t val);
@@ -116,5 +156,7 @@ os_base_t os_atomic_or(volatile os_base_t *ptr, os_base_t val);
 os_base_t os_atomic_flag_test_and_set(volatile os_base_t *ptr);
 void os_atomic_flag_clear(volatile os_base_t *ptr);
 os_base_t os_atomic_compare_exchange_strong(volatile os_base_t *ptr, os_base_t *old, os_base_t desired);
+os_base_t os_atomic_bge_set_strong(volatile os_base_t *ptr, os_base_t limit, os_base_t desired);
+os_base_t os_atomic_add_bge_set_strong(volatile os_base_t *ptr, os_base_t add_num, os_base_t limit, os_base_t desired);
 #endif
 #endif /* _OS_ATOMIC_H_ */

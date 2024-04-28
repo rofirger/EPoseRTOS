@@ -113,17 +113,45 @@ os_base_t os_atomic_compare_exchange_strong(volatile os_base_t *ptr, os_base_t *
 {
     os_base_t result = 0;
     OS_ENTER_CRITICAL
-    if ((*ptr) != (*old))
-    {
+    if ((*ptr) != (*old)){
         *old = *ptr;
         result = 0;
-    }
-    else
-    {
+    }else{
         *ptr = desired;
         result = 1;
     }
     OS_EXIT_CRITICAL
     return result;
 }
+
+os_base_t os_atomic_bge_set_strong(volatile os_base_t *ptr, os_base_t limit, os_base_t desired)
+{
+    os_base_t result = 0;
+    OS_ENTER_CRITICAL
+    if ((*ptr) >= limit) {
+        *ptr = desired;
+        result = 0;
+    } else {
+        result = 1;
+    }
+    OS_EXIT_CRITICAL
+    return result;
+}
+
+os_base_t os_atomic_add_bge_set_strong(volatile os_base_t *ptr, os_base_t add_num, os_base_t limit, os_base_t desired)
+{
+    OS_ENTER_CRITICAL
+    os_base_t result = *ptr;
+    os_base_t tmp = result;
+    tmp += add;
+    if (tmp >= limit) {
+        *ptr = desired;
+    } else {
+        *ptr = tmp;
+    }
+    OS_EXIT_CRITICAL
+    return result;
+}
 #endif
+
+
