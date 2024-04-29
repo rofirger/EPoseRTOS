@@ -103,8 +103,8 @@ void os_sys_start(void)
 {
     os_sched_insert_ready();
     os_init_msp();
-    os_board_start_interrupt();
     os_sched_set_running();
+    os_board_start_interrupt();
     os_ctx_sw();
     while (1) {
     };

@@ -121,19 +121,26 @@ SW_Handler:
 
 
 	mv sp, t1
+	j normal_stream
 no_current_task:
+	jal   os_ready_to_current
+normal_stream:
     /* switch to interrupt stack */
 	csrrw sp, mscratch, sp
     /* call  os_sys_enter_irq */
     /* clear interrupt */
     jal   os_ctx_sw_clear
+    jal   __os_int_post_handle_called_by_sw
+    jal   __os_sched_called_by_sw
+    bnez  a0, keep_current
+    jal   os_ready_to_current
+keep_current:
     /* call  os_sys_exit_irq */
     /* switch to from thread stack */
 	csrrw sp, mscratch, sp
 
 	/* switch context */
-	jal os_ready_to_current
-	la t0,  os_task_ready
+	la t0,  os_task_current
 	lw t0, 0 * 4(t0)
 	lw sp, 0 * 4(t0)
 
@@ -213,7 +220,7 @@ no_current_task:
     flw   f30, 30 * 4(sp)
     flw   f31, 31 * 4(sp)
 #endif
-	la sp, os_task_ready
+	la sp, os_task_current
 	lw sp, 0(sp)
 	lw sp, 1 * 4 (sp)
     mret

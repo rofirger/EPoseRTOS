@@ -32,6 +32,8 @@ os_handle_state_t os_mqueue_init(struct os_mqueue* mq, unsigned short mnum, unsi
 os_handle_state_t os_mqueue_send(struct os_mqueue* mq,
                                  void* buffer, unsigned short msize,
                                  unsigned int time_out);
+void __os_int_post_mqueue_send(struct os_mqueue *mq,
+                               void *buffer, unsigned short msize);
 os_handle_state_t os_mqueue_receive(struct os_mqueue* mq,
                                     void* buffer, unsigned short msize,
                                     unsigned int time_out);

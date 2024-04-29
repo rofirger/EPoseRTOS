@@ -96,6 +96,28 @@ os_handle_state_t os_mqueue_send(struct os_mqueue *mq,
     return OS_HANDLE_SUCCESS;
 }
 
+void __os_int_post_mqueue_send(struct os_mqueue *mq,
+                               void *buffer, unsigned short msize)
+{
+    if (NULL == mq ||
+        NULL == buffer ||
+        0 == msize ||
+        mq->_num_msgs >= mq->_capacity ||
+        msize > mq->_msg_size)
+        return;
+
+    struct mqueue_msg_pack *mq_pack =
+        (struct mqueue_msg_pack *)os_kmalloc(sizeof(struct mqueue_msg_pack));
+    OS_ASSERT(NULL != mq_pack);
+    mq_pack->_buffer = os_kmalloc(msize);
+    OS_ASSERT(NULL != mq_pack->_buffer);
+    os_memcpy(mq_pack->_buffer, buffer, msize);
+    mq_pack->_size = msize;
+    list_add_tail(&mq->_msg_queue, &mq_pack->_q_nd);
+    mq->_num_msgs++;
+    os_block_wakeup_first_task(&mq->_suspend, __os_mqueue_send_cb);
+}
+
 os_private inline void __os_mqueue_receive_cb(struct task_control_block *task)
 {
     // tick
