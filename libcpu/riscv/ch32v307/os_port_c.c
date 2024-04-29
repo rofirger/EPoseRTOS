@@ -178,7 +178,7 @@ unsigned int __os_enter_sys_owned_critical(void)
     OS_ENTER_CRITICAL
     old_status = NVIC_GetStatusIRQ(Software_IRQn);
     os_atomic_store(ptr_sw_disable, sw_val);
-    NVIC_DisableIRQ(SysTicK_IRQn);
+    //NVIC_DisableIRQ(SysTicK_IRQn);
     OS_EXIT_CRITICAL
     return old_status;
 }
@@ -188,7 +188,7 @@ void __os_exit_sys_owned_critical(unsigned int _state)
     if (_state) {
         OS_ENTER_CRITICAL
         os_atomic_store(ptr_sw_enable, sw_val);
-        NVIC_EnableIRQ(SysTicK_IRQn);
+        //NVIC_EnableIRQ(SysTicK_IRQn);
         OS_EXIT_CRITICAL
     }
 }
