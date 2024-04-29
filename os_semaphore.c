@@ -64,10 +64,8 @@ os_handle_state_t os_sem_take(struct os_sem *sem, unsigned int time_out)
     }
 }
 
-static bool is_take = false;
 os_private inline void __os_sem_release_cb(struct task_control_block *task)
 {
-    is_take = true;
     // 将该任务从挂载的tick上摘掉
     list_del_init(&(task->_bt_nd));
 }
@@ -77,12 +75,24 @@ os_handle_state_t os_sem_release(struct os_sem *sem)
     if (NULL == sem)
         return OS_HANDLE_FAIL;
     __OS_OWNED_ENTER_CRITICAL
-    sem->_value++;
-    is_take = false;
-    os_block_wakeup_first_task(&sem->_block_obj, __os_sem_release_cb);
-    if (is_take)
-        sem->_value--;
+
+    if (list_empty(&(sem->_block_obj._list)))
+        sem->_value++;
+    else
+        os_block_wakeup_first_task(&sem->_block_obj, __os_sem_release_cb);
+
     __OS_OWNED_EXIT_CRITICAL
     __os_sched();
     return OS_HANDLE_SUCCESS;
+}
+
+void __os_int_post_sem_release(struct os_sem *sem)
+{
+    if (NULL == sem)
+        return;
+
+    if (list_empty(&(sem->_block_obj._list)))
+        sem->_value++;
+    else
+        os_block_wakeup_first_task(&sem->_block_obj, __os_sem_release_cb);
 }

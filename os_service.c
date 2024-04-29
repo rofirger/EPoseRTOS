@@ -24,6 +24,7 @@
 #include "os_soft_timer.h"
 #include "os_config.h"
 #include "components/lib/os_string.h"
+#include"os_int_post.h"
 
 #ifdef CONFIG_FISH
 
@@ -521,6 +522,7 @@ os_private os_handle_state_t __os_fish_irq_handle_default_fn(unsigned int rec)
     static unsigned char combination_keys[5];
     static unsigned char combination_keys_index;
     static struct jiffies_structure last_jiffies;
+    static struct os_service_fish_input tmp_input_cache;
     
     if (27 == rec) {
         combination_keys_index = 0;
@@ -574,8 +576,8 @@ os_private os_handle_state_t __os_fish_irq_handle_default_fn(unsigned int rec)
 
     switch (rec) {
     case 13:  // CR (Carriage Return)
-        os_mqueue_send(os_get_fish_input_mq(), (void *)(&input_buffer),
-                       sizeof(struct os_service_fish_input), OS_MQUEUE_NO_WAIT);
+        os_memcpy(&tmp_input_cache, &input_buffer, sizeof(struct os_service_fish_input));
+        os_int_post(OS_INT_POST_OBJ_MQUEUE_SEND, os_get_fish_input_mq(), &tmp_input_cache, sizeof(struct os_service_fish_input));
         memset(input_buffer.data, 0, OS_SERVICE_FISH_MSG_MAX_SIZE);
         input_buffer.size = 0;
         break;
@@ -613,9 +615,11 @@ os_handle_state_t os_fish_irq_handle_callback(unsigned int rec)
 
 os_private os_handle_state_t __os_fish_irq_handle_step_fn(unsigned int rec)
 {
-    unsigned char get_rec = (unsigned char)rec;
-    os_mqueue_send(os_get_fish_step_input_mq(), (void *)&get_rec,
-                   sizeof(unsigned char), OS_MQUEUE_NO_WAIT);
+    static unsigned char get_rec_buff[20];
+    static os_base_t get_rec_index;
+    os_base_t reserve_pos = os_atomic_add_bge_set_strong(&get_rec_index, 1, 20, 0);
+    get_rec_buff[reserve_pos] = rec;
+    os_int_post(OS_INT_POST_OBJ_MQUEUE_SEND, os_get_fish_step_input_mq(), &get_rec_buff[reserve_pos], sizeof(unsigned char));
     return OS_HANDLE_SUCCESS;
 }
 

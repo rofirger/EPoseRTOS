@@ -24,5 +24,6 @@ os_handle_state_t os_sem_init(struct os_sem *sem, unsigned short value);
 os_handle_state_t os_sem_try_take(struct os_sem *sem);
 os_handle_state_t os_sem_take(struct os_sem *sem, unsigned int time_out);
 os_handle_state_t os_sem_release(struct os_sem *sem);
+void __os_int_post_sem_release(struct os_sem *sem);
 
 #endif

@@ -27,11 +27,12 @@ void __os_int_post_handle_called_by_sw(void)
 {
     while (_pull_pos != _post_pos) {
         switch (_int_post_objs[_pull_pos].type) {
-        case OS_OBJ_MQUEUE_SEND:
+        case OS_INT_POST_OBJ_MQUEUE_SEND:
             __os_int_post_mqueue_send(_int_post_objs[_pull_pos].obj,
                     _int_post_objs[_pull_pos].msg, _int_post_objs[_pull_pos].msg_size);
             break;
-        case OS_OBJ_SEM_RELEASE:
+        case OS_INT_POST_OBJ_SEM_RELEASE:
+            __os_int_post_sem_release(_int_post_objs[_pull_pos].obj);
             break;
         default:
             break;
@@ -42,7 +43,7 @@ void __os_int_post_handle_called_by_sw(void)
     }
 }
 
-void os_int_post(enum os_obj_type type, void* obj, void* msg, unsigned int msg_size)
+void os_int_post(enum os_int_post_obj_type type, void* obj, void* msg, unsigned int msg_size)
 {
     os_base_t reserve = os_atomic_add_bge_set_strong(&_post_pos, 1, CONFIG_OS_INT_POST_NUM, 0);
     _int_post_objs[reserve].type = type;
