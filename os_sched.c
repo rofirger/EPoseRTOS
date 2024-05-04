@@ -16,9 +16,9 @@
 
 #include "board/libcpu_headfile.h"
 
-unsigned char os_ready_table[32];
-unsigned int os_ready_priority_group;
-struct os_ready_queue _os_rq;
+static unsigned char os_ready_table[32];
+static unsigned int os_ready_priority_group;
+static struct os_ready_queue _os_rq;
 static unsigned char _os_sched_lock_nesting;
 // 时间片管理
 static unsigned int _sched_prio_timeslice[OS_READY_LIST_SIZE];
