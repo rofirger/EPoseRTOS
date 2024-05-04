@@ -36,8 +36,8 @@ void os_port_init(void);
 /*
  * switch to interrupt stack
  * */
-#define GET_INT_MSP()  asm("csrrw sp,mscratch,sp")
-#define FREE_INT_MSP() asm("csrrw sp,mscratch,sp")
+#define GET_INT_MSP()  asm volatile("csrrw sp,mscratch,sp")
+#define FREE_INT_MSP() asm volatile("csrrw sp,mscratch,sp")
 
 /*
  * Wait For Interrupt. 
