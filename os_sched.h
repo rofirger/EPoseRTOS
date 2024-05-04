@@ -48,6 +48,7 @@ struct task_control_block *os_get_ready_task_tcb(void);
 void os_sched_insert_ready(void);
 int __os_sched_called_by_sw(void);
 int __os_sched(void);
+os_handle_state_t os_task_yield(void);
 void os_sched_halt(void);
 bool os_sched_is_running(void);
 void os_sched_set_running(void);

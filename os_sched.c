@@ -256,6 +256,27 @@ inline void os_sched_timeslice_reload(struct task_control_block *_task_tcb)
 }
 
 /*********************************************************************
+ * @fn      os_task_yield
+ * @param   none
+ * @brief   Yields the processor by voluntarily giving up
+ *          the CPU execution time for the current thread.
+ * @return  OS_HANDLE_SUCCESS: yield successfully
+ */
+os_handle_state_t os_task_yield(void)
+{
+    __OS_OWNED_ENTER_CRITICAL
+    if (os_sched_timeslice_get(os_task_current->_task_priority) !=
+            OS_SCHED_TIMESLICE_NULL) {
+        os_task_current->_task_timeslice = 0;
+        __OS_OWNED_EXIT_CRITICAL;
+        __os_sched();
+        return OS_HANDLE_SUCCESS;
+    }
+    __OS_OWNED_EXIT_CRITICAL
+    return OS_HANDLE_FAIL;
+}
+
+/*********************************************************************
  * @fn      os_sched_timeslice_poll
  * @param   none
  * @brief   time-slice poll, ONLY called by os_systick_handler
