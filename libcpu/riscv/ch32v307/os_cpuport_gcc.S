@@ -130,9 +130,15 @@ normal_stream:
     /* call  os_sys_enter_irq */
     /* clear interrupt */
     jal   os_ctx_sw_clear
+    jal   __os_int_post_status_called_by_sw
+	bnez  a0, no_int_post
     jal   __os_int_post_handle_called_by_sw
+no_int_post:
+	jal   __os_sched_status_called_by_sw
+	bnez  a0, no_need_call_sched
     jal   __os_sched_called_by_sw
     bnez  a0, keep_current
+no_need_call_sched:
     jal   os_ready_to_current
 keep_current:
     /* call  os_sys_exit_irq */

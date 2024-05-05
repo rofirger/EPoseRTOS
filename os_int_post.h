@@ -11,6 +11,7 @@
 #define _OS_INT_POST_H_
 
 #include "os_list.h"
+#include "os_def.h"
 enum os_int_post_obj_type {
     OS_INT_POST_OBJ_NONE = 0,
     OS_INT_POST_OBJ_MQUEUE_SEND,
@@ -27,4 +28,5 @@ struct os_int_post_pack {
 void os_int_post_init(void);
 void os_int_post(enum os_int_post_obj_type type, void* obj, void* msg, unsigned int msg_size);
 void __os_int_post_handle_called_by_sw(void);
+bool __os_int_post_status_called_by_sw(void);
 #endif /* _OS_INT_POST_H_ */

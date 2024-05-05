@@ -342,10 +342,15 @@ inline void os_sched_insert_ready(void)
     os_task_ready = os_rq_get_highest_prio_task();
 }
 
+inline bool __os_sched_status_called_by_sw(void)
+{
+    return os_task_current != os_task_ready;
+}
+
 int __os_sched_called_by_sw(void)
 {
-    if (!os_sched_is_running())
-        return -1;
+    if (os_task_current != os_task_ready)
+        return 0;
     // 当线程处于调度锁并且存在延时时,将线程切换到系统空闲线程
     if (os_sched_is_lock()) {
         static struct task_control_block *_lock_tcb;
@@ -373,24 +378,27 @@ int __os_sched_called_by_sw(void)
 int __os_sched(void)
 {
     __OS_OWNED_ENTER_CRITICAL
-    struct task_control_block *tmp_ready;
     // 当线程处于调度锁并且存在延时时,将线程切换到系统空闲线程
     if (os_sched_is_lock()) {
         static struct task_control_block *_lock_tcb;
         if (os_task_current != os_get_idle_tcb())
             _lock_tcb = os_task_current;
         if (_lock_tcb->_task_block_state == OS_TASK_BLOCK_TICKING)
-            tmp_ready = os_get_idle_tcb();
+            os_task_ready = os_get_idle_tcb();
         else
-            tmp_ready = _lock_tcb;
+            os_task_ready = _lock_tcb;
     } else
-        tmp_ready = os_rq_get_highest_prio_task();
+        os_task_ready = os_rq_get_highest_prio_task();
 
-    if (NULL == tmp_ready ||
-        os_task_current == tmp_ready) {
+    if (NULL == os_task_ready ||
+        os_task_current == os_task_ready) {
         __OS_OWNED_EXIT_CRITICAL
         return -1;
     }
+    // 更改任务状态
+    os_task_state_set_running(os_task_ready);
+    if (os_task_state_is_running(os_task_current))
+        os_task_state_set_ready(os_task_current);
     __OS_OWNED_EXIT_CRITICAL
     // 触发异常，以进行上下文切换
     os_ctx_sw();

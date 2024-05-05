@@ -46,6 +46,7 @@ struct task_control_block *os_get_current_task_tcb(void);
 void os_set_current_task_tcb(struct task_control_block *tcb);
 struct task_control_block *os_get_ready_task_tcb(void);
 void os_sched_insert_ready(void);
+bool __os_sched_status_called_by_sw(void);
 int __os_sched_called_by_sw(void);
 int __os_sched(void);
 os_handle_state_t os_task_yield(void);

@@ -23,6 +23,11 @@ void os_int_post_init(void)
     _lose_post_num = 0;
 }
 
+inline bool __os_int_post_status_called_by_sw(void)
+{
+    return _pull_pos == _post_pos;
+}
+
 void __os_int_post_handle_called_by_sw(void)
 {
     while (_pull_pos != _post_pos) {
