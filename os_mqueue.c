@@ -44,7 +44,7 @@ os_private inline void __os_mqueue_send_cb(struct task_control_block *task)
 }
 
 os_handle_state_t os_mqueue_send(struct os_mqueue *mq,
-                                 void *buffer, unsigned short msize,
+                                 const void *buffer, unsigned short msize,
                                  unsigned int time_out)
 {
     if (NULL == mq ||
@@ -97,7 +97,7 @@ os_handle_state_t os_mqueue_send(struct os_mqueue *mq,
 }
 
 void __os_int_post_mqueue_send(struct os_mqueue *mq,
-                               void *buffer, unsigned short msize)
+                               const void *buffer, unsigned short msize)
 {
     if (NULL == mq ||
         NULL == buffer ||

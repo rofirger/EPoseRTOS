@@ -82,6 +82,7 @@ void os_sys_init(void)
     os_soft_timer_init();
     // initialize timeslice
     os_sched_timeslice_init();
+    os_sys_owned_block_init();
     os_sys_ready_queue_init();
     // initialize service
     os_service_init();

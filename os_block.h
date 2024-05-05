@@ -17,6 +17,7 @@ typedef enum os_block_type {
     OS_BLOCK_TICK = (2),
     OS_BLOCK_SEM = (3),
     OS_BLOCK_MQUEUE = (4),
+    OS_BLOCK_SYS_OWNED = (5),
 } os_block_type_t;
 
 struct os_block_object {
@@ -36,5 +37,8 @@ os_handle_state_t os_block_wakeup_task(struct task_control_block *_task_tcb);
 void os_block_wakeup_first_task(struct os_block_object *_block_obj,
                                 void (*callback)(struct task_control_block *task));
 void os_block_wakeup_all_task(struct os_block_object *_block_obj);
+void os_sys_owned_block_init(void);
+os_handle_state_t os_task_suspend(struct task_control_block *_task_tcb);
+os_handle_state_t os_task_resume(struct task_control_block *_task_tcb);
 
 #endif

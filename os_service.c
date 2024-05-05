@@ -25,6 +25,7 @@
 #include "os_config.h"
 #include "components/lib/os_string.h"
 #include"os_int_post.h"
+#include "math.h"
 
 #ifdef CONFIG_FISH
 
@@ -178,6 +179,38 @@ static char *number(char *str,
     return str;
 }
 
+// 辅助函数：将整数部分和小数部分分离
+static void separate_integer_and_fraction(double val, long long *integer_part, long long *fraction_part, int decimals)
+{
+    *integer_part = (long long)val;
+    double fraction = val - *integer_part;
+
+    if (decimals > 0) {
+        double multiplier = pow(10, decimals);
+        fraction *= multiplier;
+        *fraction_part = (long long)fraction;
+    } else {
+        *fraction_part = 0;
+    }
+}
+
+// 辅助函数：将整数部分或小数部分转换为字符串
+static void convert_to_string(char *buf, long long value, int length)
+{
+    int i = length - 1;
+    while (value > 0) {
+        buf[i] = '0' + (value % 10);
+        value /= 10;
+        i--;
+    }
+
+    // 填充剩余的位置为 '0'
+    while (i >= 0) {
+        buf[i] = '0';
+        i--;
+    }
+}
+
 int os_vsprintf(char *buf, const char *fmt, va_list args)
 {
     int len;
@@ -314,6 +347,47 @@ int os_vsprintf(char *buf, const char *fmt, va_list args)
                          field_width, precision, flags);
             break;
 
+        case 'f':
+        {
+            double val = va_arg(args, double);
+            int decimals = precision >= 0 ? precision : 6; // 默认保留6位小数
+
+            // 处理负数情况
+            if (val < 0) {
+                *str++ = '-';
+                val = -val;
+            }
+
+            long long integer_part;
+            long long fraction_part;
+            separate_integer_and_fraction(val, &integer_part, &fraction_part, decimals);
+
+            char integer_buf[20]; // 存储整数部分的字符串
+            char fraction_buf[20]; // 存储小数部分的字符串
+
+            convert_to_string(integer_buf, integer_part, 20);
+            convert_to_string(fraction_buf, fraction_part, 20);
+            bool is_skip = false;
+            // 将整数部分复制到输出缓冲区
+            for (int i = 0; i < 20; i++) {
+                if (integer_buf[i] != '0')
+                    is_skip = true;
+                if (is_skip)
+                    *str++ = integer_buf[i];
+            }
+
+            // 处理小数点
+            *str++ = '.';
+            is_skip = false;
+            // 将小数部分复制到输出缓冲区
+            for (int i = 0; i < 20; i++) {
+                if (fraction_buf[i] != '0')
+                    is_skip = true;
+                if (is_skip)
+                    *str++ = fraction_buf[i];
+            }
+            break;
+        }
         case 'n':
             ip = va_arg(args, int *);
             *ip = (str - buf);

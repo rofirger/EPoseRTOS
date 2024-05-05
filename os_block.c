@@ -14,6 +14,9 @@
 #include "os_def.h"
 #include "os_sched.h"
 #include "os_tick.h"
+#include "board/libcpu_headfile.h"
+
+static struct os_block_object _owned_sys_block;
 
 /* 将链节挂载到阻塞对象 */
 os_private void __os_block_list_add(struct os_block_object *_block_obj, struct task_control_block *_task_tcb)
@@ -164,4 +167,36 @@ void os_block_wakeup_all_task(struct os_block_object *_block_obj)
         _task_tcb = os_list_entry(_current_node, struct task_control_block, _slot_nd);
         os_block_wakeup_task(_task_tcb);
     }
+}
+
+void os_sys_owned_block_init(void)
+{
+    os_block_init(&_owned_sys_block, OS_BLOCK_SYS_OWNED);
+}
+
+os_handle_state_t os_task_suspend(struct task_control_block *_task_tcb)
+{
+    if (_task_tcb == NULL)
+        return OS_HANDLE_FAIL;
+    __OS_OWNED_ENTER_CRITICAL
+    if (os_task_is_block(_task_tcb))
+        return OS_HANDLE_FAIL;
+    os_add_block_task(_task_tcb, &_owned_sys_block);
+    __OS_OWNED_EXIT_CRITICAL
+    __os_sched();
+    return OS_HANDLE_SUCCESS;
+}
+
+os_handle_state_t os_task_resume(struct task_control_block *_task_tcb)
+{
+    if (_task_tcb == NULL)
+        return OS_HANDLE_FAIL;
+    __OS_OWNED_ENTER_CRITICAL
+    if (false == os_task_is_block(_task_tcb))
+        return OS_HANDLE_FAIL;
+    __os_block_list_del(_task_tcb);
+    os_rq_add_task(_task_tcb);
+    __OS_OWNED_EXIT_CRITICAL
+    __os_sched();
+    return OS_HANDLE_SUCCESS;
 }

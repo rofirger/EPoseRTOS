@@ -29,11 +29,11 @@ struct os_mqueue{
 };
 
 os_handle_state_t os_mqueue_init(struct os_mqueue* mq, unsigned short mnum, unsigned short msize);
-os_handle_state_t os_mqueue_send(struct os_mqueue* mq,
-                                 void* buffer, unsigned short msize,
+os_handle_state_t os_mqueue_send(struct os_mqueue *mq,
+                                 const void *buffer, unsigned short msize,
                                  unsigned int time_out);
 void __os_int_post_mqueue_send(struct os_mqueue *mq,
-                               void *buffer, unsigned short msize);
+                               const void *buffer, unsigned short msize);
 os_handle_state_t os_mqueue_receive(struct os_mqueue* mq,
                                     void* buffer, unsigned short msize,
                                     unsigned int time_out);
