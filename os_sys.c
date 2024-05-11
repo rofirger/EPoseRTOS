@@ -46,9 +46,13 @@ inline struct task_control_block *os_get_idle_tcb(void)
 // 1.为什么 printf 会占用没有被 ld 分配的内存区域？？？
 os_private void __os_welcome_kprint(void)
 {
-    os_printk("***********\r\n");
-    os_printk("* WELCOME *\r\n");
-    os_printk("***********\r\n");
+    os_printk(" ______ _____               _____ _______ ____   _____ \r\n");
+    os_printk("|  ____|  __ \\             |  __ \\__   __/ __ \\ / ____|\r\n");
+    os_printk("| |__  | |__) |__  ___  ___| |__) | | | | |  | | (___  \r\n");
+    os_printk("|  __| |  ___/ _ \\/ __|/ _ \\  _  /  | | | |  | |\\___ \\ \r\n");
+    os_printk("| |____| |  | (_) \\__ \\  __/ | \\ \\  | | | |__| |____) |\r\n");
+    os_printk("|______|_|   \\___/|___/\\___|_|  \\_\\ |_|  \\____/|_____/ \r\n");
+    os_printk("                                               --Kernel\r\n");
 }
 
 /**
