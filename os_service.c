@@ -747,11 +747,11 @@ os_private OS_CMD_PROCESS_FN(list_cmd)
                                                           sizeof(struct os_fish_cmd_structure))) {
         // skip "__os_cmd"
         str = &(cmd_structure->cmd_name[9]);
-        os_printk("%s    ", str);
+        os_printk("%-20s", str);
         os_printk("- %s\r\n", cmd_structure->cmd_desc);
         num++;
     }
-    os_printk("\r\n");
+    // os_printk("\r\n");
     return num;
 }
 
